@@ -95,7 +95,6 @@ export function loadEnvKey(key: string): string {
 
 export function isReady(config: AirtypeConfig): boolean {
   return !!(
-    config.onboardingDone &&
     config.shortcutKeys.length > 0 &&
     config.micDevice && config.micDevice !== "default" &&
     config.testPassed
