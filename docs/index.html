@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airtype</title>
+  <meta name="description" content="Hands-free voice transcription for macOS.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0c0c0c;
+      --text: #c8c8c8;
+      --dim: #555;
+      --accent: #22d3ee;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    ::selection {
+      background: var(--accent);
+      color: #000;
+    }
+
+    a { color: var(--text); text-decoration: none; }
+    a:hover { color: #fff; }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 32px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      font-size: 13px;
+    }
+    nav .logo {
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+    nav .links { display: flex; gap: 28px; }
+    nav .links a { color: var(--dim); transition: color 0.2s; }
+    nav .links a:hover { color: var(--text); }
+
+    /* ── Hero ── */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 80px);
+      padding: 0 40px;
+      text-align: center;
+    }
+
+    .ascii {
+      font-size: 11px;
+      line-height: 1.3;
+      color: var(--dim);
+      white-space: pre;
+      margin-bottom: 48px;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards 0.2s;
+    }
+
+    .hero h1 {
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards 0.6s;
+    }
+
+    .tagline {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.3;
+      max-width: 500px;
+      margin-bottom: 48px;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards 0.8s;
+    }
+
+    .cta {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--dim);
+      border: 1px solid #282828;
+      padding: 14px 28px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards 1s;
+      cursor: pointer;
+      background: none;
+    }
+    .cta:hover {
+      color: var(--text);
+      border-color: #444;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 32px;
+      font-size: 11px;
+      color: #333;
+      letter-spacing: 3px;
+      animation: pulse 3s ease-in-out infinite 2s;
+    }
+
+    /* ── Demo ── */
+    .demo {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 120px 40px;
+    }
+
+    .term {
+      border: 1px solid #1a1a1a;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .term-bar {
+      display: flex;
+      gap: 6px;
+      padding: 10px 14px;
+      background: #111;
+    }
+    .term-bar span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #282828;
+    }
+
+    .term-body {
+      padding: 20px;
+      font-size: 13px;
+      line-height: 2;
+      background: #0f0f0f;
+    }
+    .term-body .p { color: #4ade80; }
+    .term-body .c { color: var(--text); }
+    .term-body .o { color: var(--accent); }
+    .term-body .d { color: #333; }
+
+    /* ── Sections ── */
+    .section {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 80px 40px;
+    }
+
+    .section h2 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 40px;
+    }
+
+    .section p {
+      font-size: 14px;
+      line-height: 1.9;
+      color: #777;
+      margin-bottom: 20px;
+    }
+
+    .section p strong {
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    /* ── Steps ── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      counter-reset: step;
+    }
+    .step {
+      padding: 20px 0;
+      border-bottom: 1px solid #161616;
+      font-size: 14px;
+      color: #777;
+      display: flex;
+      gap: 20px;
+    }
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      color: #333;
+      font-size: 12px;
+      flex-shrink: 0;
+      width: 20px;
+      text-align: right;
+    }
+    .step strong { color: var(--text); font-weight: 400; }
+
+    /* ── Langs ── */
+    .langs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .lang {
+      font-size: 12px;
+      padding: 6px 14px;
+      border: 1px solid #1a1a1a;
+      border-radius: 3px;
+      color: #555;
+    }
+
+    /* ── Pricing ── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: #1a1a1a;
+      border: 1px solid #1a1a1a;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .plan {
+      background: var(--bg);
+      padding: 32px;
+    }
+    .plan h3 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 16px;
+    }
+    .plan .price {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .plan .price span {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--dim);
+    }
+    .plan .note {
+      font-size: 12px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .plan ul {
+      list-style: none;
+      font-size: 12px;
+      color: #555;
+    }
+    .plan ul li {
+      padding: 5px 0;
+    }
+    .plan ul li::before {
+      content: "~ ";
+      color: #333;
+    }
+
+    /* ── Install ── */
+    .install-block {
+      background: #0f0f0f;
+      border: 1px solid #1a1a1a;
+      border-radius: 6px;
+      padding: 24px;
+      font-size: 13px;
+      line-height: 2.2;
+    }
+    .install-block .d { color: #333; }
+    .install-block .c { color: var(--text); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 60px 40px;
+      font-size: 11px;
+      color: #282828;
+      letter-spacing: 2px;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.8; }
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 24px 20px; }
+      .hero { padding: 0 20px; }
+      .ascii { font-size: 7px; }
+      .tagline { font-size: 24px; }
+      .section, .demo { padding-left: 20px; padding-right: 20px; }
+      .pricing-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Airtype</div>
+  <div class="links">
+    <a href="#how">How</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#install">Install</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="ascii">
+ █████╗ ██╗██████╗ ████████╗██╗   ██╗██████╗ ███████╗
+██╔══██╗██║██╔══██╗╚══██╔══╝╚██╗ ██╔╝██╔══██╗██╔════╝
+███████║██║██████╔╝   ██║    ╚████╔╝ ██████╔╝█████╗
+██╔══██║██║██╔══██╗   ██║     ╚██╔╝  ██╔═══╝ ██╔══╝
+██║  ██║██║██║  ██║   ██║      ██║   ██║     ███████╗
+╚═╝  ╚═╝╚═╝╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝     ╚══════╝</div>
+  <h1>Hands-free transcription</h1>
+  <div class="tagline">Speak. It types.</div>
+  <a href="#install" class="cta">bun add -g @superdots/airtype</a>
+  <div class="scroll-hint">scroll</div>
+</section>
+
+<div class="demo">
+  <div class="term">
+    <div class="term-bar"><span></span><span></span><span></span></div>
+    <div class="term-body">
+      <div><span class="p">$</span> <span class="c">airtype</span></div>
+      <div><span class="d">  ● Ready — Cmd+Esc to record</span></div>
+      <div>&nbsp;</div>
+      <div><span class="d">  [recording...]</span></div>
+      <div><span class="d">  "um so I think... no wait... we need to fix the bug"</span></div>
+      <div>&nbsp;</div>
+      <div><span class="o">  &gt; We need to fix the bug.</span></div>
+      <div><span class="d">  890ms — pasted</span></div>
+    </div>
+  </div>
+</div>
+
+<section class="section" id="how">
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step"><strong>Press your shortcut.</strong> Recording starts. A sound confirms.</div>
+    <div class="step"><strong>Speak naturally.</strong> Hesitate, repeat, self-correct. Airtype handles it.</div>
+    <div class="step"><strong>Press again.</strong> Transcribed, polished, pasted at your cursor. Under 2 seconds.</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>What it does</h2>
+  <p><strong>Removes filler.</strong> "Um", "uh", false starts, stutters — gone.</p>
+  <p><strong>Formats smartly.</strong> Lists get numbered. Emails get line breaks. Punctuation appears where it should.</p>
+  <p><strong>Works everywhere.</strong> Any app that accepts text. Terminal, browser, Slack, VS Code, mail.</p>
+  <p><strong>No API keys.</strong> Runs through a secure proxy. Install and go.</p>
+</section>
+
+<section class="section">
+  <h2>Languages</h2>
+  <p>Input and output are independent. Speak Korean, get English. Or any combination.</p>
+  <div class="langs">
+    <span class="lang">English</span>
+    <span class="lang">Korean</span>
+    <span class="lang">Japanese</span>
+    <span class="lang">Chinese</span>
+    <span class="lang">Spanish</span>
+    <span class="lang">French</span>
+    <span class="lang">German</span>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <h2>Pricing</h2>
+  <div class="pricing-grid">
+    <div class="plan">
+      <h3>Free</h3>
+      <div class="price">$0</div>
+      <div class="note">10,000 words / week</div>
+      <ul>
+        <li>All languages</li>
+        <li>Smart formatting</li>
+        <li>Auto paste</li>
+      </ul>
+    </div>
+    <div class="plan">
+      <h3>Pro</h3>
+      <div class="price">$9 <span>/ mo</span></div>
+      <div class="note">Unlimited</div>
+      <ul>
+        <li>Everything in Free</li>
+        <li>Unlimited words</li>
+        <li>Priority support</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="install">
+  <h2>Install</h2>
+  <div class="install-block">
+    <div><span class="d"># prerequisites</span></div>
+    <div><span class="c">brew install sox switchaudio-osx</span></div>
+    <div><span class="c">curl -fsSL https://bun.sh/install | bash</span></div>
+    <div>&nbsp;</div>
+    <div><span class="d"># install</span></div>
+    <div><span class="c">bun add -g @superdots/airtype</span></div>
+    <div>&nbsp;</div>
+    <div><span class="d"># run</span></div>
+    <div><span class="c">airtype</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Requirements</h2>
+  <p>macOS. Bun. sox. Accessibility permission.</p>
+</section>
+
+<footer>AIRTYPE</footer>
+
+</body>
+</html>
