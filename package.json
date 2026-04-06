@@ -1,0 +1,40 @@
+{
+  "name": "@superdots/airtype",
+  "version": "0.2.8",
+  "description": "Speak and it types. Hands-free voice transcription CLI for macOS.",
+  "type": "module",
+  "bin": {
+    "airtype": "./bin/airtype.js"
+  },
+  "scripts": {
+    "start": "bun run src/app.tsx",
+    "setup": "bun run src/app.tsx --setup",
+    "test": "bun run src/test-blocks.ts",
+    "postinstall": "echo '\\n  Run: airtype\\n'"
+  },
+  "keywords": ["voice", "transcription", "dictation", "stt", "cli", "macos", "hands-free", "speech-to-text"],
+  "author": "myungseung",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/myungseung/airtype.git"
+  },
+  "homepage": "https://myungseung.github.io/airtype/",
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "os": ["darwin"],
+  "files": [
+    "bin/",
+    "src/*.ts",
+    "src/*.tsx",
+    "README.md"
+  ],
+  "dependencies": {
+    "ink": "^6.8.0",
+    "ink-select-input": "^6.2.0",
+    "ink-spinner": "^5.0.0",
+    "node-global-key-listener": "^0.3.0",
+    "react": "^19.2.4"
+  }
+}
