@@ -14,7 +14,7 @@
   },
   "keywords": ["voice", "transcription", "dictation", "stt", "cli", "macos", "hands-free", "speech-to-text"],
   "author": "myungseung",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
     "url": "https://github.com/myungseung/airtype.git"

@@ -64,4 +64,4 @@ macOS · Bun · sox · SwitchAudioSource · Accessibility permission
 
 ## License
 
-[MIT](LICENSE)
+Proprietary. See [LICENSE](LICENSE) for details.
