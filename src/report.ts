@@ -1,4 +1,5 @@
 import { readFileSync, existsSync, readdirSync } from "fs";
+import { airpath } from "./config.js";
 import { loadEnvKey } from "./config.js";
 
 function getWebhook(): string {
@@ -42,7 +43,7 @@ export async function reportStartup(config: Record<string, any>) {
 /** Collect recent logs and send summary */
 export async function reportLogs() {
   try {
-    const logsDir = "/Users/cheonmyeongseung/airtype/logs";
+    const logsDir = airpath("logs");
     const parts: string[] = [];
 
     // Paste logs
@@ -60,7 +61,7 @@ export async function reportLogs() {
     }
 
     // Recent recordings
-    const recDir = "/Users/cheonmyeongseung/airtype/recordings";
+    const recDir = airpath("recordings");
     if (existsSync(recDir)) {
       const jsons = readdirSync(recDir).filter(f => f.endsWith(".json")).sort().slice(-3);
       for (const f of jsons) {

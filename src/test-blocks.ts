@@ -58,9 +58,9 @@ async function main() {
   // ─── Block B: keystroke log ───
   console.log(`\n${DIM}[B] keystroke log${RESET}`);
 
-  const logPath = "/Users/cheonmyeongseung/airtype/logs/keystrokes.jsonl";
+  const logPath = airpath("logs", "keystrokes.jsonl");
   // Clear and test
-  mkdirSync("/Users/cheonmyeongseung/airtype/logs", { recursive: true });
+  mkdirSync(airpath("logs"), { recursive: true });
   if (existsSync(logPath)) unlinkSync(logPath);
 
   // Calling buildCombo should write to log
@@ -159,7 +159,7 @@ async function main() {
       const llmResult = await polish(orKey, stt.text || "test sentence for pipeline");
 
       const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-      const dir = "/Users/cheonmyeongseung/airtype/recordings";
+      const dir = airpath("recordings");
       mkdirSync(dir, { recursive: true });
       const jsonPath = `${dir}/test-${ts}.json`;
       writeFileSync(jsonPath, JSON.stringify({

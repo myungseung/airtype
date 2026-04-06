@@ -1,3 +1,5 @@
+const PROXY_URL = "https://airtype-xi.vercel.app/api/llm";
+
 const SYSTEM_PROMPT = `You are a voice-to-text polish assistant. Your job is to clean up raw speech transcription into well-written, professionally formatted text.
 
 Rules:
@@ -31,15 +33,12 @@ export interface LlmResult {
   durationMs: number;
 }
 
-export async function polish(apiKey: string, rawText: string, model = "google/gemini-2.5-flash"): Promise<LlmResult> {
+export async function polish(rawText: string, model = "google/gemini-2.5-flash"): Promise<LlmResult> {
   const start = Date.now();
 
-  const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const resp = await fetch(PROXY_URL, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model,
       messages: [

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { render, Box, Text, useInput } from "ink";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
-import { loadConfig, saveConfig, loadEnvKey, isReady, type AirtypeConfig } from "./config.js";
+import { loadConfig, saveConfig, loadEnvKey, isReady, airpath, addWords, isOverLimit, type AirtypeConfig } from "./config.js"; // airpath imported
 import { GlobalKeyboardListener } from "node-global-key-listener";
 import { buildCombo, isModifier, isDuplicate } from "./keys.js";
 import { startRecording } from "./audio.js";
@@ -102,7 +102,7 @@ const KeyCaptureHint = () => {
 };
 
 // ─── Onboarding ──────────────────────────────────────
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 const GUIDES = [
   { intro: "말을 더듬어도, Airtype이 깔끔하게 정리해줘요.", sentence: "Um so I think... no wait... we need to fix the login bug" },
@@ -114,7 +114,8 @@ type StepId = 1 | 2 | 3 | 4 | 5 | 6 | 7; // 7 = congrats
 
 const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: AirtypeConfig) => void }) => {
   const [stepId, setStepId] = useState<StepId>(1);
-  const [cfg, setCfg] = useState({ ...config, groqApiKey: loadEnvKey("GROQ_API_KEY"), openrouterApiKey: loadEnvKey("OPENROUTER_API_KEY") });
+  
+  const [cfg, setCfg] = useState({ ...config });
   const [capturedCombo, setCapturedCombo] = useState("");
   const [phase, setPhase] = useState<RecPhase>("wait");
   const [result, setResult] = useState<{ raw: string; pol: string } | null>(null);
@@ -165,12 +166,12 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
           r.stop().then(async (wav) => {
             try {
               const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-              const dir = "/Users/cheonmyeongseung/airtype/recordings";
+              const dir = airpath("recordings");
               mkdirSync(dir, { recursive: true });
               writeFileSync(`${dir}/onboard-${ts}.wav`, wav);
 
-              const stt = await transcribe(cfgRef.current.groqApiKey, wav, "auto");
-              const llm = await polish(cfgRef.current.openrouterApiKey, stt.text);
+              const stt = await transcribe(wav, "auto");
+              const llm = await polish(stt.text);
               setResult({ raw: stt.text, pol: llm.text });
 
               writeFileSync(`${dir}/onboard-${ts}.json`, JSON.stringify({
@@ -209,12 +210,19 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
       phaseRef.current = "wait";
       setPhase("wait");
       setVolume(0);
+
+      // Mark test passed after free test (step 3)
+      if (s === 3) {
+        cfgRef.current = { ...cfgRef.current, testPassed: true };
+        setCfg(cfgRef.current);
+      }
+
       if (s < 6) {
         stepRef.current = (s + 1) as StepId;
         setStepId((s + 1) as StepId);
       } else {
         // Save and show congrats
-        const final = { ...cfgRef.current, onboardingDone: true };
+        const final = { ...cfgRef.current, onboardingDone: true, testPassed: true };
         saveConfig(final);
         stepRef.current = 7;
         setStepId(7);
@@ -351,17 +359,18 @@ const Daemon = ({ config, autoEnter, onToggleAutoEnter, onOpenSettings }: { conf
         rec.stop().then(async (wav) => {
           try {
             const t0 = Date.now();
-            const stt = await transcribe(config.groqApiKey, wav, config.language);
+            const stt = await transcribe(wav, "auto");
             if (!stt.text.trim()) { sRef.current = "ready"; setState("ready"); return; }
-            const llm = await polish(config.openrouterApiKey, stt.text);
+            const llm = await polish(stt.text);
             const paste = await pasteText(llm.text, autoEnterRef.current);
             const total = Date.now() - t0;
             const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-            const dir = "/Users/cheonmyeongseung/airtype/recordings";
+            const dir = airpath("recordings");
             mkdirSync(dir, { recursive: true });
             writeFileSync(`${dir}/${ts}.wav`, wav);
             writeFileSync(`${dir}/${ts}.json`, JSON.stringify({ ts, rawText: stt.text, polishedText: llm.text, sttMs: stt.durationMs, llmMs: llm.durationMs, pasteMs: paste, totalMs: total }, null, 2));
             setLast({ raw: stt.text, pol: llm.text, stt: stt.durationMs, llm: llm.durationMs, paste, total });
+            addWords(config, llm.text);
             setError(null);
           } catch (e: any) { setError(e.message); reportError("daemon-pipeline", e.message); }
           sRef.current = "ready"; setState("ready");
@@ -400,6 +409,13 @@ const Daemon = ({ config, autoEnter, onToggleAutoEnter, onOpenSettings }: { conf
         </Box>
       )}
       {error && <Text color="red">ERROR: {error}</Text>}
+      {isOverLimit(config) && state === "ready" && (
+        <Box marginTop={1} flexDirection="column">
+          <Text color="yellow">무료 {(config.wordCount || 0).toLocaleString()}단어 사용 (10,000단어 무료)</Text>
+          <Text dimColor>Airtype이 도움이 되셨나요? 유료 플랜을 준비 중이에요.</Text>
+          <Text dimColor>지금은 계속 무료로 사용 가능합니다.</Text>
+        </Box>
+      )}
     </Box>
   );
 };

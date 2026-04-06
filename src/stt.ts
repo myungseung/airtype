@@ -1,24 +1,21 @@
-const GROQ_URL = "https://api.groq.com/openai/v1/audio/transcriptions";
+const PROXY_URL = "https://airtype-xi.vercel.app/api/stt";
 
 export interface SttResult {
   text: string;
   durationMs: number;
 }
 
-export async function transcribe(apiKey: string, wavBuffer: Buffer, language: string): Promise<SttResult> {
+export async function transcribe(wavBuffer: Buffer, language: string): Promise<SttResult> {
   const start = Date.now();
 
   const formData = new FormData();
   formData.append("file", new Blob([wavBuffer], { type: "audio/wav" }), "audio.wav");
-  formData.append("model", "whisper-large-v3");
-  formData.append("response_format", "json");
   if (language && language !== "auto") {
     formData.append("language", language);
   }
 
-  const resp = await fetch(GROQ_URL, {
+  const resp = await fetch(PROXY_URL, {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}` },
     body: formData,
   });
 

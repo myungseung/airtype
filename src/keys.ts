@@ -22,9 +22,10 @@ export function buildCombo(keyName: string, isDown: IGlobalKeyDownMap): string {
 
   // Raw log every key event for debugging
   const fs = require("fs");
+  const { airpath } = require("./config.js");
   const ts = new Date().toISOString();
   const logLine = JSON.stringify({ ts, keyName, combo: result, isDown: Object.fromEntries(Object.entries(isDown).filter(([_, v]) => v)) }) + "\n";
-  fs.appendFileSync("/Users/cheonmyeongseung/airtype/logs/keystrokes.jsonl", logLine);
+  try { fs.appendFileSync(airpath("logs", "keystrokes.jsonl"), logLine); } catch {}
 
   return result;
 }

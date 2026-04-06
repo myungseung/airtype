@@ -1,11 +1,11 @@
 import { spawn, execSync } from "child_process";
-import { appendFileSync, mkdirSync } from "fs";
+import { appendFileSync } from "fs";
+import { airpath } from "./config.js";
 
 /** Copy text to clipboard and Cmd+V via osascript. Logs everything for debugging. */
 export async function pasteText(text: string, autoEnter = true): Promise<number> {
   const start = Date.now();
-  const logPath = "/Users/cheonmyeongseung/airtype/logs/paste.jsonl";
-  mkdirSync("/Users/cheonmyeongseung/airtype/logs", { recursive: true });
+  const logPath = airpath("logs", "paste.jsonl");
 
   const log = (data: Record<string, any>) => {
     appendFileSync(logPath, JSON.stringify({ ts: new Date().toISOString(), ...data }) + "\n");
