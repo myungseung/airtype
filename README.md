@@ -21,17 +21,17 @@ Press a shortcut. Speak. It transcribes, polishes, and pastes — into any app.
 - **Live speech bar** — see your mic level in real-time
 - **Auto paste** — result goes straight to your cursor
 - **Fast** — under 2 seconds total
+- **No API keys needed** — runs through a secure server proxy
 
 ## Install
 
 ```bash
+# Prerequisites
 brew install sox switchaudio-osx
 curl -fsSL https://bun.sh/install | bash
 
-git clone https://github.com/myungseung/airtype.git
-cd airtype/ts
-bun install
-bun link
+# Install airtype
+bun add -g @superdots/airtype
 ```
 
 ## Usage
@@ -53,14 +53,10 @@ airtype --setup  # redo settings
 | "First update docs second fix bug third deploy" | 1. Update docs. 2. Fix bug. 3. Deploy. |
 | "Dear Michael new line follow up period Regards Chris" | Dear Michael,\nFollow up.\nRegards, Chris |
 
-## API Keys
+## Daemon Mode Keys
 
-`.env` file in project root:
-
-```
-GROQ_API_KEY=gsk_...        # console.groq.com (free)
-OPENROUTER_API_KEY=sk-or-... # openrouter.ai
-```
+- `S` — settings menu (shortcut, mic, auto-enter)
+- `E` — toggle auto-enter ON/OFF
 
 ## Requirements
 
@@ -68,4 +64,4 @@ macOS · Bun · sox · SwitchAudioSource · Accessibility permission
 
 ## License
 
-MIT
+[MIT](LICENSE)
