@@ -16,6 +16,7 @@ export async function transcribe(wavBuffer: Buffer, language: string): Promise<S
 
   const resp = await fetch(PROXY_URL, {
     method: "POST",
+    headers: { "x-airtype-client": "cli" },
     body: formData,
   });
 

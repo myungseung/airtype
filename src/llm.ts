@@ -38,7 +38,7 @@ export async function polish(rawText: string, model = "google/gemini-2.5-flash")
 
   const resp = await fetch(PROXY_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-airtype-client": "cli" },
     body: JSON.stringify({
       model,
       messages: [
