@@ -14,6 +14,22 @@ mkdirSync(airpath("recordings"), { recursive: true });
 const CONFIG_PATH = airpath("config.json");
 const ENV_PATH = airpath(".env");
 
+export type SystemLang = "ko" | "en";
+
+export const INPUT_LANGS = ["auto", "ko", "en", "ja", "zh", "es", "fr", "de"] as const;
+export const OUTPUT_LANGS = ["en", "ko", "ja", "zh", "es", "fr", "de"] as const;
+
+export const LANG_LABELS: Record<string, Record<SystemLang, string>> = {
+  auto: { ko: "자동 감지", en: "Auto detect" },
+  ko: { ko: "한국어", en: "Korean" },
+  en: { ko: "영어", en: "English" },
+  ja: { ko: "일본어", en: "Japanese" },
+  zh: { ko: "중국어", en: "Chinese" },
+  es: { ko: "스페인어", en: "Spanish" },
+  fr: { ko: "프랑스어", en: "French" },
+  de: { ko: "독일어", en: "German" },
+};
+
 export interface AirtypeConfig {
   micDevice: string;
   language: string;
@@ -23,6 +39,11 @@ export interface AirtypeConfig {
   wordCount: number;
   testPassed: boolean;
   onboardingDone: boolean;
+  systemLang: SystemLang;
+  inputLang: string;
+  outputLang: string;
+  weeklyWordCount: number;
+  weekStartDate: string;
 }
 
 const defaults: AirtypeConfig = {
@@ -34,6 +55,11 @@ const defaults: AirtypeConfig = {
   wordCount: 0,
   testPassed: false,
   onboardingDone: false,
+  systemLang: "ko",
+  inputLang: "auto",
+  outputLang: "en",
+  weeklyWordCount: 0,
+  weekStartDate: getMonday(new Date()),
 };
 
 export function loadConfig(): AirtypeConfig {
@@ -76,16 +102,42 @@ export function isReady(config: AirtypeConfig): boolean {
   );
 }
 
-const FREE_WORD_LIMIT = 10000;
+const FREE_WEEKLY_LIMIT = 10000;
+
+/** Get Monday of the week for a given date (ISO week, YYYY-MM-DD) */
+function getMonday(d: Date): string {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Reset weekly count if we're in a new week */
+function ensureWeeklyReset(config: AirtypeConfig): void {
+  const currentMonday = getMonday(new Date());
+  if (!config.weekStartDate || config.weekStartDate < currentMonday) {
+    config.weeklyWordCount = 0;
+    config.weekStartDate = currentMonday;
+  }
+}
 
 /** Add words and save. Returns true if over free limit. */
 export function addWords(config: AirtypeConfig, text: string): boolean {
   const words = text.trim().split(/\s+/).length;
   config.wordCount = (config.wordCount || 0) + words;
+  ensureWeeklyReset(config);
+  config.weeklyWordCount = (config.weeklyWordCount || 0) + words;
   saveConfig(config);
-  return config.wordCount > FREE_WORD_LIMIT;
+  return config.weeklyWordCount > FREE_WEEKLY_LIMIT;
 }
 
 export function isOverLimit(config: AirtypeConfig): boolean {
-  return (config.wordCount || 0) > FREE_WORD_LIMIT;
+  ensureWeeklyReset(config);
+  return (config.weeklyWordCount || 0) >= FREE_WEEKLY_LIMIT;
+}
+
+export function getWeeklyRemaining(config: AirtypeConfig): number {
+  ensureWeeklyReset(config);
+  return Math.max(0, FREE_WEEKLY_LIMIT - (config.weeklyWordCount || 0));
 }

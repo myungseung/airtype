@@ -40,6 +40,22 @@ export async function reportStartup(config: Record<string, any>) {
   } catch {}
 }
 
+/** Report payment intent (yes/no from free tier limit prompt) */
+export async function reportPaymentIntent(choice: "yes" | "no") {
+  try {
+    const hostname = require("os").hostname();
+    const payload = {
+      text: `💳 *Payment Intent*\n*Choice:* ${choice === "yes" ? "✅ YES" : "❌ NO"}\n*Host:* ${hostname}\n*Time:* ${new Date().toISOString()}`,
+    };
+    const wh = getWebhook(); if (!wh) return;
+    await fetch(wh, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch {}
+}
+
 /** Collect recent logs and send summary */
 export async function reportLogs() {
   try {

@@ -1,9 +1,16 @@
 const PROXY_URL = "https://airtype-xi.vercel.app/api/llm";
 
-const SYSTEM_PROMPT = `You are a voice-to-text polish assistant. Your job is to clean up raw speech transcription into well-written, professionally formatted text.
+const LANG_NAMES: Record<string, string> = {
+  en: "English", ko: "Korean", ja: "Japanese", zh: "Chinese",
+  es: "Spanish", fr: "French", de: "German",
+};
+
+function buildSystemPrompt(outputLang: string): string {
+  const langName = LANG_NAMES[outputLang] || "English";
+  return `You are a voice-to-text polish assistant. Your job is to clean up raw speech transcription into well-written, professionally formatted text.
 
 Rules:
-1. ALWAYS output in English, even if the input is in Korean or another language — translate naturally
+1. ALWAYS output in ${langName}, even if the input is in another language — translate naturally
 2. Add proper punctuation (periods, commas, question marks)
 3. Remove filler words (um, uh, 음, 어, 그)
 4. Fix grammar while preserving the original meaning exactly
@@ -27,13 +34,14 @@ Hesitation & Repetition Clearing — remove false starts and self-corrections, k
 - "so the thing is... what I mean is... we need X" → "We need X"
 - Stuttered words: "the the the problem" → "The problem"
 - Abandoned sentences followed by restart: keep only the restart`;
+}
 
 export interface LlmResult {
   text: string;
   durationMs: number;
 }
 
-export async function polish(rawText: string, model = "google/gemini-2.5-flash"): Promise<LlmResult> {
+export async function polish(rawText: string, model = "google/gemini-2.5-flash", outputLang = "en"): Promise<LlmResult> {
   const start = Date.now();
 
   const resp = await fetch(PROXY_URL, {
@@ -42,7 +50,7 @@ export async function polish(rawText: string, model = "google/gemini-2.5-flash")
     body: JSON.stringify({
       model,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: buildSystemPrompt(outputLang) },
         { role: "user", content: `<transcription>${rawText}</transcription>` },
       ],
       max_tokens: 4096,
