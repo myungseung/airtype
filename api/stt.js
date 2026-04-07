@@ -13,9 +13,22 @@ export default async function handler(req, res) {
   try {
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
-    const body = Buffer.concat(chunks);
+    let body = Buffer.concat(chunks);
 
     const contentType = req.headers["content-type"];
+    const boundary = contentType?.match(/boundary=(.+)/)?.[1];
+
+    // backward compat: inject model/response_format if old client (v0.4.0) didn't send them
+    if (boundary && !body.includes("name=\"model\"")) {
+      const closing = Buffer.from(`--${boundary}--`);
+      const idx = body.indexOf(closing);
+      if (idx !== -1) {
+        const extra =
+          `--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-large-v3\r\n` +
+          `--${boundary}\r\nContent-Disposition: form-data; name="response_format"\r\n\r\njson\r\n`;
+        body = Buffer.concat([body.subarray(0, idx), Buffer.from(extra), closing, Buffer.from("\r\n")]);
+      }
+    }
 
     const resp = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
       method: "POST",

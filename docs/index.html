@@ -3,326 +3,452 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Airtype — Speak and it types</title>
-  <meta name="description" content="Hands-free voice transcription for macOS.">
+  <title>Airtype — Voice to text. Straight to the terminal.</title>
+  <meta name="description" content="Blazing fast, extremely lightweight real-time transcription. Speak your native language, output English to save LLM tokens.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --bg: #0c0c0c;
-      --border: #1a1a1a;
-      --text: #d4d4d4;
-      --dim: #555;
-      --cyan: #10b981;
-      --green: #10b981;
-      --red: #f87171;
-      --yellow: #fbbf24;
-      --purple: #a78bfa;
+      --bg-base: #0A0A0A;
+      --bg-surface: #121212;
+      --text-primary: #EDEDED;
+      --text-muted: #888888;
+      --accent-green: #4ADE80;
+      --accent-red: #F87171;
+      --border-color: #333333;
+      --border-dim: #1a1a1a;
       --mono: 'JetBrains Mono', monospace;
     }
-    html, body {
-      height: 100%;
-      overflow: hidden;
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
       font-family: var(--mono);
-      background: var(--bg);
-      color: var(--text);
+      background: var(--bg-base);
+      color: var(--text-primary);
       -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
     }
-    ::selection { background: var(--cyan); color: #000; }
-    a { color: var(--text); text-decoration: none; }
+    ::selection { background: var(--accent-green); color: #000; }
+    a { color: var(--text-primary); text-decoration: none; }
 
-    .page {
-      height: 100vh;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      max-width: 720px;
+    .container {
+      max-width: 768px;
       margin: 0 auto;
-      padding: 20px 32px;
+      padding: 0 24px;
     }
 
+    /* ── NAVBAR ── */
     nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-dim);
+    }
+    nav .container {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 16px;
-      font-size: 12px;
+      height: 52px;
     }
-    nav .logo { font-weight: 700; letter-spacing: 3px; font-size: 13px; }
-    nav .links { display: flex; gap: 20px; }
-    nav .links a { color: var(--dim); transition: color 0.2s; }
-    nav .links a:hover { color: var(--text); }
+    .nav-logo {
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 3px;
+      color: var(--text-primary);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .nav-links a {
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+    .nav-cta {
+      font-size: 11px;
+      padding: 6px 16px;
+      border: 1px solid var(--accent-green);
+      border-radius: 4px;
+      color: var(--accent-green) !important;
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav-cta:hover {
+      background: var(--accent-green);
+      color: #000 !important;
+    }
 
+    /* ── HERO ── */
     .hero {
       text-align: center;
-      padding: 24px 0 20px;
+      padding: 80px 0 64px;
     }
-    .hero .ascii {
-      font-size: 8px;
-      line-height: 1.3;
-      color: var(--cyan);
+    .hero-ascii {
+      font-size: 7.5px;
+      line-height: 1.25;
+      color: var(--accent-green);
       white-space: pre;
-      margin-bottom: 6px;
-      opacity: 0.7;
+      opacity: 0.6;
+      margin-bottom: 32px;
     }
-    .hero .sub {
-      font-size: 11px;
-      color: #282828;
-      letter-spacing: 4px;
-    }
-    .hero .tagline {
-      font-size: 13px;
-      color: var(--dim);
-      margin-top: 12px;
-      letter-spacing: 1px;
-    }
-    .hero .tagline strong {
-      color: var(--text);
+    .hero-title {
+      font-size: 20px;
       font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+    .hero-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin: 0 auto 40px;
+      line-height: 1.8;
+    }
+    .install-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 12px 20px;
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: border-color 0.2s;
+      background: var(--bg-surface);
+    }
+    .install-box:hover { border-color: var(--accent-green); }
+    .install-box .dollar { color: var(--accent-green); }
+    .install-box .copy-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      border-left: 1px solid var(--border-color);
+      padding-left: 12px;
+      transition: color 0.2s;
+    }
+    .install-box:hover .copy-label { color: var(--accent-green); }
+    .hero-hint {
+      font-size: 11px;
+      color: #444;
+      margin-top: 16px;
     }
 
+    /* ── DEMO TERMINAL ── */
+    .demo {
+      padding: 0 0 80px;
+    }
     .term {
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-dim);
       border-radius: 8px;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
     }
     .term-bar {
       display: flex;
       align-items: center;
       gap: 7px;
-      padding: 10px 16px;
-      background: #161616;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      padding: 12px 16px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-dim);
     }
     .term-bar .dot { width: 10px; height: 10px; border-radius: 50%; background: #282828; }
     .term-bar .title {
       flex: 1;
       text-align: center;
       font-size: 11px;
-      color: #333;
+      color: #444;
       margin-right: 36px;
-      transition: color 0.3s;
     }
-    .term-bar .rec-badge {
-      font-size: 10px;
-      color: var(--red);
-      opacity: 0;
-      transition: opacity 0.2s;
+    .term-body {
+      padding: 24px;
+      font-size: 13px;
+      line-height: 1.8;
+      background: var(--bg-base);
+      min-height: 260px;
     }
-    .term-bar .rec-badge.on {
+    .term-body .prompt { color: var(--accent-green); font-weight: 700; }
+    .term-body .cmd { color: var(--text-primary); }
+    .term-body .out { color: var(--text-muted); }
+    .term-body .dim { color: #444; }
+    .rec-dot {
+      display: inline-block;
+      color: var(--accent-red);
+      font-weight: 700;
       animation: recPulse 1s ease-in-out infinite;
     }
     @keyframes recPulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
-    .term-body {
-      flex: 1;
-      padding: 20px 24px;
-      font-size: 13px;
-      line-height: 1.7;
-      background: #0e0e0e;
-      overflow-y: auto;
-      overflow-x: hidden;
-    }
-
-    .tui-divider { color: #1a1a1a; margin: 8px 0; font-size: 12px; }
-
-    .state-line {
-      font-size: 13px;
-      min-height: 22px;
-      margin: 2px 0;
-    }
-    .state-line .green { color: var(--green); font-weight: 700; }
-    .state-line .red { color: var(--red); font-weight: 700; }
-    .state-line .yellow { color: var(--yellow); }
-    .state-line .cyan { color: var(--cyan); }
-    .state-line .purple { color: var(--purple); }
-    .state-line .orange { color: #f59e0b; }
-    .state-line .dim { color: #333; }
-    .state-line .prompt { color: var(--green); }
-    .state-line .cmd { color: var(--text); }
-    .state-line .out { color: var(--dim); }
-    .state-line .result { color: var(--text); font-weight: 700; }
-    .speech-bar { color: var(--cyan); }
-
-    /* ── Claude Code UI ── */
-    .cc-tool { margin: 6px 0; }
-    .cc-tool-name { color: #f59e0b; font-weight: 700; font-size: 13px; }
-    .cc-tool-path { color: var(--text); font-size: 13px; }
-    .cc-tool-sub { color: var(--dim); font-size: 12px; padding-left: 16px; }
-    .cc-bullet { font-size: 13px; margin: 6px 0; line-height: 1.6; color: var(--text); }
-    .cc-bullet::before { content: "\25CF "; color: var(--text); font-size: 8px; vertical-align: middle; }
-    .cc-diff { font-family: var(--mono); font-size: 12px; margin: 4px 0 4px 16px; padding: 2px 6px; border-radius: 3px; }
-    .cc-diff-del { background: rgba(248,113,113,0.15); color: var(--red); }
-    .cc-diff-add { background: rgba(16,185,129,0.15); color: var(--green); }
-    .cc-diff-ctx { color: var(--dim); }
-    .cc-linenum { color: #333; display: inline-block; width: 24px; text-align: right; margin-right: 8px; }
-    .cc-status { font-size: 12px; margin: 8px 0; }
-    .cc-input-box {
-      border: 1px solid #333;
-      border-radius: 6px;
-      padding: 10px 14px;
-      margin: 10px 0 6px;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 38px;
-    }
-    .cc-input-box .cc-caret {
+    .speech-bar { color: var(--accent-green); }
+    .cursor-blink {
       display: inline-block;
-      width: 2px;
-      height: 16px;
-      background: var(--text);
       animation: blink 1s step-end infinite;
     }
     @keyframes blink { 50% { opacity: 0; } }
-    .cc-input-box .cc-prompt-char { color: var(--dim); }
-    .cc-footer-hint { font-size: 11px; color: #333; }
-    .cc-footer-hint .hl { color: var(--dim); }
-
-    /* ── Editor UI ── */
-    .editor-toolbar {
+    .term-status {
       display: flex;
-      gap: 16px;
+      justify-content: space-between;
       padding: 8px 16px;
-      border-bottom: 1px solid var(--border);
-      font-size: 11px;
-      color: #333;
-      background: #131313;
+      font-size: 10px;
+      color: #444;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-dim);
     }
-    .editor-toolbar span { cursor: default; }
-    .editor-toolbar .active { color: var(--dim); }
-    .editor-body {
-      flex: 1;
-      padding: 20px 24px;
-      font-size: 14px;
-      line-height: 1.8;
-      background: #0e0e0e;
-      overflow-y: auto;
-      color: var(--text);
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 0 0 80px;
     }
-    .editor-body .placeholder { color: #282828; }
-    .editor-cursor {
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+    .feature {
+      text-align: center;
+    }
+    .feature-icon {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    .feature-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+    .feature-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ── DIVIDER ── */
+    .section-divider {
+      text-align: center;
+      color: #222;
+      font-size: 12px;
+      padding: 0 0 80px;
+      letter-spacing: 8px;
+    }
+
+    /* ── PRICING ── */
+    .pricing {
+      text-align: center;
+      padding: 0 0 80px;
+    }
+    .pricing-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+    .pricing-card {
       display: inline-block;
-      width: 2px;
-      height: 16px;
-      background: var(--text);
-      vertical-align: text-bottom;
-      animation: blink 1s step-end infinite;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 32px 48px;
+      background: var(--bg-surface);
+      margin-bottom: 32px;
     }
-
-    /* ── Gmail UI ── */
-    .gmail-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 16px;
-      border-bottom: 1px solid var(--border);
-      background: #131313;
+    .pricing-amount {
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .pricing-period {
       font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
     }
-    .gmail-bar .send-btn {
-      background: #3b82f6;
-      color: #fff;
-      border: none;
+    .pricing-cta {
+      display: inline-block;
+      padding: 10px 32px;
+      border: 1px solid var(--accent-green);
       border-radius: 4px;
-      padding: 5px 16px;
-      font-family: var(--mono);
-      font-size: 11px;
-      cursor: default;
-    }
-    .gmail-bar .icon-btn { color: #333; cursor: default; }
-    .gmail-field {
-      display: flex;
-      padding: 8px 16px;
-      border-bottom: 1px solid #161616;
+      color: var(--accent-green);
       font-size: 12px;
+      font-family: var(--mono);
+      font-weight: 700;
+      letter-spacing: 1px;
+      transition: background 0.2s, color 0.2s;
+      cursor: pointer;
     }
-    .gmail-field .label { color: #333; width: 50px; flex-shrink: 0; }
-    .gmail-field .value { color: var(--dim); }
-    .gmail-subject {
-      display: flex;
-      padding: 8px 16px;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
+    .pricing-cta:hover {
+      background: var(--accent-green);
+      color: #000;
     }
-    .gmail-subject .label { color: #333; width: 70px; flex-shrink: 0; }
-    .gmail-subject .value { color: var(--text); font-weight: 700; }
-    .gmail-body {
-      flex: 1;
-      padding: 16px 24px;
-      font-size: 13px;
-      line-height: 1.8;
-      background: #0e0e0e;
-      overflow-y: auto;
-      color: var(--text);
+    .pricing-features {
+      list-style: none;
+      margin-top: 32px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 2.2;
+    }
+    .pricing-features .check {
+      color: var(--accent-green);
+      margin-right: 8px;
     }
 
-    .foot {
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border-dim);
+      padding: 24px 0;
+    }
+    footer .container {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 16px;
       font-size: 11px;
-      color: #282828;
+      color: #444;
     }
-    .foot a { color: #333; }
-    .foot a:hover { color: var(--dim); }
-    .foot .install-cmd {
-      color: var(--dim);
-      border: 1px solid var(--border);
-      padding: 6px 14px;
-      border-radius: 4px;
-      transition: color 0.2s, border-color 0.2s;
-      cursor: pointer;
+    footer a {
+      color: #555;
+      transition: color 0.2s;
     }
-    .foot .install-cmd:hover { color: var(--text); border-color: #333; }
+    footer a:hover { color: var(--text-muted); }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
 
+    /* ── RESPONSIVE ── */
     @media (max-width: 600px) {
-      .page { padding: 12px 12px; }
-      .term-body { padding: 14px 16px; font-size: 12px; }
-      .hero .ascii { font-size: 7px; }
+      .hero { padding: 48px 0 40px; }
+      .hero-ascii { font-size: 5px; margin-bottom: 24px; }
+      .hero-title { font-size: 16px; }
+      .hero-subtitle { font-size: 12px; }
+      .features-grid { grid-template-columns: 1fr; gap: 40px; }
+      .term-body { padding: 16px; font-size: 12px; min-height: 200px; }
+      .pricing-card { padding: 24px 32px; }
+      .nav-links a:not(.nav-cta) { display: none; }
     }
   </style>
 </head>
 <body>
 
-<div class="page">
-  <div class="hero">
-    <div class="ascii">
+<!-- NAVBAR -->
+<nav>
+  <div class="container">
+    <span class="nav-logo">AIRTYPE</span>
+    <div class="nav-links">
+      <a href="https://github.com/myungseung/airtype" target="_blank">GitHub</a>
+      <a href="#features">Features</a>
+      <a href="#pricing" class="nav-cta">Get for $9</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-ascii">
  █████╗ ██╗██████╗ ████████╗██╗   ██╗██████╗ ███████╗
 ██╔══██╗██║██╔══██╗╚══██╔══╝╚██╗ ██╔╝██╔══██╗██╔════╝
 ███████║██║██████╔╝   ██║    ╚████╔╝ ██████╔╝█████╗
 ██╔══██║██║██╔══██╗   ██║     ╚██╔╝  ██╔═══╝ ██╔══╝
 ██║  ██║██║██║  ██║   ██║      ██║   ██║     ███████╗
 ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝     ╚══════╝</div>
-    <a href="#" class="install-box" id="copy-top" style="display:inline-block; margin-top:10px; padding:8px 20px; border:1px solid #282828; border-radius:5px; font-size:12px; color:var(--dim); letter-spacing:1px; transition: color 0.2s, border-color 0.2s; cursor:pointer; text-decoration:none;">bun add -g @superdots/airtype</a>
-  </div>
-
-  <div class="term">
-    <div class="term-bar">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      <div class="title" id="term-title">Terminal</div>
+    <h1 class="hero-title">VOICE TO TEXT. STRAIGHT TO THE TERMINAL.</h1>
+    <p class="hero-subtitle">Blazing fast, extremely lightweight real-time transcription.<br>Speak your native language, output English to save LLM tokens.</p>
+    <div class="install-box" id="copy-btn">
+      <span><span class="dollar">$</span> bun add -g @superdots/airtype</span>
+      <span class="copy-label">Copy</span>
     </div>
-    <div class="term-body" id="term"></div>
+    <div class="hero-hint">Press Enter to start typing.</div>
   </div>
+</section>
 
-  <div class="foot">
-    <span>&copy; 2025 myungseung</span>
-    <a href="#" class="install-cmd" id="copy-btn">bun add -g @superdots/airtype</a>
+<!-- DEMO -->
+<section class="demo">
+  <div class="container">
+    <div class="term">
+      <div class="term-bar">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="title" id="term-title">airtype</div>
+      </div>
+      <div class="term-body" id="term"></div>
+      <div class="term-status">
+        <span id="status-left">Ready</span>
+        <span id="status-right"></span>
+      </div>
+    </div>
   </div>
-</div>
+</section>
+
+<!-- FEATURES -->
+<div class="section-divider">- - - - - -</div>
+
+<section class="features" id="features">
+  <div class="container">
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon">&#9889;</div>
+        <div class="feature-title">Extremely Lite</div>
+        <div class="feature-desc">Terminal-native. Zero Electron bloat. Instant startup with one command.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#127760;</div>
+        <div class="feature-title">LLM Token Optimized</div>
+        <div class="feature-desc">Speak Korean (or any), output English directly into Claude Code.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#129504;</div>
+        <div class="feature-title">Smart Formatting</div>
+        <div class="feature-desc">Auto-punctuation, casing, and keyword commands. Just say "new line".</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<div class="section-divider">- - - - - -</div>
+
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="pricing-label">NO SUBSCRIPTIONS.</div>
+    <div class="pricing-card">
+      <div class="pricing-amount">$9</div>
+      <div class="pricing-period">One-time</div>
+      <a href="#" class="pricing-cta">Buy Now &rarr;</a>
+    </div>
+    <ul class="pricing-features">
+      <li><span class="check">&#10003;</span>Unlimited terminal transcription</li>
+      <li><span class="check">&#10003;</span>Multi-language support</li>
+      <li><span class="check">&#10003;</span>75% cheaper than Typeless</li>
+    </ul>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <span>&copy; 2026 superdots.app</span>
+    <div class="footer-links">
+      <a href="https://github.com/myungseung/airtype" target="_blank">GitHub</a>
+      <a href="#">Terms</a>
+      <a href="#">Privacy</a>
+    </div>
+  </div>
+</footer>
 
 <script>
-let term = document.getElementById('term');
+const term = document.getElementById('term');
 const termTitle = document.getElementById('term-title');
+const statusLeft = document.getElementById('status-left');
+const statusRight = document.getElementById('status-right');
 let abortCtrl = null;
 
 function sleep(ms, signal) {
@@ -334,6 +460,11 @@ function sleep(ms, signal) {
 
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+function barFrame(level) {
+  const w = 20, f = Math.round(level * w);
+  return '[' + '\u2588'.repeat(f) + '\u2591'.repeat(w - f) + ']';
+}
+
 async function typeText(el, text, speed, signal) {
   for (let i = 0; i < text.length; i++) {
     if (signal?.aborted) throw new DOMException('Aborted','AbortError');
@@ -344,15 +475,10 @@ async function typeText(el, text, speed, signal) {
 
 function addLine(html) {
   const div = document.createElement('div');
-  div.className = 'state-line';
+  div.style.margin = '2px 0';
   div.innerHTML = html;
   term.appendChild(div);
   return div;
-}
-
-function barFrame(level) {
-  const w = 20, f = Math.round(level * w);
-  return '[' + '\u2588'.repeat(f) + '\u2591'.repeat(w - f) + ']';
 }
 
 async function animateBar(el, ms, signal) {
@@ -360,219 +486,150 @@ async function animateBar(el, ms, signal) {
   while (Date.now() - start < ms) {
     if (signal?.aborted) throw new DOMException('Aborted','AbortError');
     const t = (Date.now() - start) / ms;
-    const level = Math.min(1, Math.max(0, 0.2 + Math.sin(t * Math.PI * 6) * 0.3 + Math.random() * 0.2));
-    el.innerHTML = '<span class="red" style="font-weight:700">\u25CF Recording  </span><span class="speech-bar">' + barFrame(level) + '</span>';
+    const level = Math.min(1, Math.max(0, 0.15 + Math.sin(t * Math.PI * 5) * 0.3 + Math.random() * 0.25));
+    el.innerHTML = '<span class="rec-dot">\u25CF Recording  </span><span class="speech-bar">' + barFrame(level) + '</span>';
     await sleep(80, signal);
   }
 }
 
-async function typePrompt(id, text, speed, signal) {
-  addLine('<span class="prompt">\u276F</span> <span class="cmd" id="' + id + '"></span>');
-  await typeText(document.getElementById(id), text, speed, signal);
-}
-
-// helper: recording bar animation in element
-async function recBar(el, ms, signal) {
-  const start = Date.now();
-  while (Date.now() - start < ms) {
-    if (signal?.aborted) throw new DOMException('Aborted','AbortError');
-    const t = (Date.now() - start) / ms;
-    const lv = Math.min(1, Math.max(0, 0.2 + Math.sin(t * Math.PI * 6) * 0.3 + Math.random() * 0.2));
-    el.innerHTML = '<span class="red" style="font-weight:700">\u25CF Recording  </span><span class="speech-bar">' + barFrame(lv) + '</span>';
-    await sleep(80, signal);
-  }
-}
-
-// helper: recording label + raw text → thinking → instant replace
-async function rawThenFormat(container, rawText, formatted, signal) {
-  container.innerHTML = '';
-
-  // recording label (red, blinking)
-  const recLabel = document.createElement('div');
-  recLabel.style.marginBottom = '8px';
-  recLabel.innerHTML = '<span style="color:var(--red); font-size:11px; animation: recPulse 1s ease-in-out infinite;">\u25CF recording...</span>';
-  container.appendChild(recLabel);
-
-  const rawEl = document.createElement('span');
-  rawEl.style.color = '#666';
-  container.appendChild(rawEl);
-  const cursor = document.createElement('span');
-  cursor.className = 'editor-cursor';
-  container.appendChild(cursor);
-
-  // type raw text (recording stays visible throughout)
-  await typeText(rawEl, rawText, 14, signal);
-  await sleep(500, signal);
-
-  // instant replace
-  recLabel.remove();
-  cursor.remove();
-  rawEl.style.color = 'var(--text)';
-  rawEl.innerHTML = esc(formatted).replace(/\n/g, '<br>');
-  await sleep(2000, signal);
-}
-
-// swap term-body with custom content
-function setTermContent(html) {
-  const wrapper = document.querySelector('.term');
-  const oldBody = document.getElementById('term');
-  const bar = wrapper.querySelector('.term-bar');
-  // remove everything after bar
-  while (bar.nextSibling) bar.nextSibling.remove();
-  // insert new content
-  const div = document.createElement('div');
-  div.id = 'term';
-  div.innerHTML = html;
-  wrapper.appendChild(div);
-  return div;
+async function typePrompt(text, speed, signal) {
+  const line = addLine('<span class="prompt">\u276F </span><span class="cmd"></span>');
+  const cmdEl = line.querySelector('.cmd');
+  await typeText(cmdEl, text, speed, signal);
 }
 
 async function play(signal) {
-  const wrapper = document.querySelector('.term');
-  const bar = wrapper.querySelector('.term-bar');
+  term.innerHTML = '';
+  termTitle.textContent = 'airtype';
+  statusLeft.textContent = 'Ready';
+  statusRight.textContent = '';
 
-  function resetTerm() { while (bar.nextSibling) bar.nextSibling.remove(); }
-
-  // ══════════════════════════════════════
-  // 1. INSTALL + FIRST RECORDING
-  // ══════════════════════════════════════
-  termTitle.textContent = 'Terminal';
-  termTitle.style.color = '#333';
-  resetTerm();
-  const t1 = document.createElement('div');
-  t1.className = 'term-body';
-  t1.id = 'term';
-  wrapper.appendChild(t1);
-  term = t1;
-
-  await typePrompt('i1', 'bun add -g @superdots/airtype', 20, signal);
+  // ── Scene 1: Install ──
+  await typePrompt('bun add -g @superdots/airtype', 22, signal);
   await sleep(600, signal);
-  addLine('<span class="out">  + @superdots/airtype@0.4.0</span>');
-  await sleep(400, signal);
-  addLine('<span class="green">  \u2713 Installed</span>');
-  await sleep(800, signal);
-
-  addLine('');
-  await typePrompt('i2', 'airtype', 50, signal);
+  addLine('<span class="out">  + @superdots/airtype@0.4.1</span>');
+  await sleep(300, signal);
+  addLine('<span style="color:var(--accent-green)">  \u2713 Installed</span>');
   await sleep(600, signal);
-
-  // first recording
   addLine('');
-  const rawArea = document.createElement('div');
-  rawArea.className = 'state-line';
-  rawArea.style.marginTop = '8px';
-  term.appendChild(rawArea);
-
-  await rawThenFormat(rawArea,
-    'Um so I think... no wait... we need to fix the login bug',
-    'We need to fix the login bug.',
-    signal
-  );
-  addLine('<span class="dim" style="font-size:11px">890ms \u2014 pasted \u2713</span>');
-
-  // ══════════════════════════════════════
-  // 2. CLAUDE CODE
-  // ══════════════════════════════════════
-  termTitle.textContent = '\u2731 claude';
-  termTitle.style.color = 'var(--purple)';
-  resetTerm();
-
-  const ccBody = document.createElement('div');
-  ccBody.className = 'term-body';
-  ccBody.id = 'term';
-  ccBody.innerHTML = ''
-    + '<div class="cc-tool"><span class="cc-tool-name">\u25CF Read</span><span class="cc-tool-path">(src/auth/middleware.ts)</span></div>'
-    + '<div class="cc-tool-sub">\u2514 Read <strong>142</strong> lines (ctrl+r to expand)</div>'
-    + '<div class="cc-bullet">I can see the middleware uses session cookies. Let me refactor it to use JWT.</div>'
-    + '<div class="cc-tool" style="margin-top:10px"><span class="cc-tool-name">\u25CF Update</span><span class="cc-tool-path">(src/auth/middleware.ts)</span></div>'
-    + '<div class="cc-tool-sub">\u2514 Updated with <strong>3</strong> additions and <strong>1</strong> removal</div>'
-    + '<div class="cc-diff cc-diff-ctx"><span class="cc-linenum">1</span>  import express from &quot;express&quot;;</div>'
-    + '<div class="cc-diff cc-diff-del"><span class="cc-linenum">2</span>- import { sessionStore } from &quot;./sessions&quot;;</div>'
-    + '<div class="cc-diff cc-diff-add"><span class="cc-linenum">2</span>+ import { verifyJWT } from &quot;./jwt&quot;;</div>'
-    + '<div class="cc-diff cc-diff-add"><span class="cc-linenum">3</span>+ import { sessionStore } from &quot;./sessions&quot;; // compat</div>'
-    + '<div class="cc-status"><span class="orange">\u2731</span> <span style="color:var(--dim)">Done (8s \u00B7 312 tokens)</span></div>';
-  wrapper.appendChild(ccBody);
-  term = ccBody;
-
-  const inputBox = document.createElement('div');
-  inputBox.className = 'cc-input-box';
-  inputBox.innerHTML = '<span class="cc-prompt-char">&gt;</span> <span class="cc-caret"></span>';
-  term.appendChild(inputBox);
-  const footHint = document.createElement('div');
-  footHint.className = 'cc-footer-hint';
-  footHint.innerHTML = '\u25B6\u25B6 <span class="hl">auto-accept edits on</span> (shift+tab to cycle)';
-  term.appendChild(footHint);
-  term.scrollTop = term.scrollHeight;
+  await typePrompt('airtype', 50, signal);
   await sleep(500, signal);
 
-  // raw then format in input box
-  const ibContent = document.createElement('span');
-  inputBox.innerHTML = '<span class="cc-prompt-char">&gt;</span> ';
-  inputBox.appendChild(ibContent);
-  await rawThenFormat(ibContent,
-    'um add rate limiting to the uh JWT verification thing with like 100 requests per minute',
-    'Add rate limiting to the JWT verification with a 100 req/min window.',
-    signal
-  );
-  term.scrollTop = term.scrollHeight;
+  // ── Scene 2: First recording ──
+  statusLeft.textContent = 'Listening...';
+  addLine('');
+  const recLine = addLine('');
+  await animateBar(recLine, 2500, signal);
 
-  // ══════════════════════════════════════
-  // 3. TEXT EDITOR — smart formatting
-  // ══════════════════════════════════════
-  termTitle.textContent = 'Editor';
-  termTitle.style.color = 'var(--dim)';
-  resetTerm();
+  statusLeft.textContent = 'Processing...';
+  recLine.innerHTML = '<span class="dim">  Transcribing...</span>';
+  await sleep(600, signal);
 
-  const edToolbar = document.createElement('div');
-  edToolbar.className = 'editor-toolbar';
-  edToolbar.innerHTML = '<span class="active">File</span><span>Edit</span><span>View</span><span style="margin-left:auto; color:#282828">meeting-notes.md</span>';
-  wrapper.appendChild(edToolbar);
+  // Raw text appears
+  recLine.innerHTML = '';
+  const rawSpan = document.createElement('span');
+  rawSpan.style.color = 'var(--text-muted)';
+  recLine.appendChild(rawSpan);
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor-blink';
+  cursor.textContent = '\u2588';
+  recLine.appendChild(cursor);
 
-  const edBody = document.createElement('div');
-  edBody.className = 'editor-body';
-  edBody.id = 'term';
-  wrapper.appendChild(edBody);
-  term = edBody;
+  const rawText = 'Um so I think... no wait... we need to fix the login bug';
+  await typeText(rawSpan, rawText, 16, signal);
+  await sleep(400, signal);
 
-  await rawThenFormat(term,
-    'first review Q3 metrics dashboard second discuss hiring timeline for the backend role third align on launch date for v2 fourth schedule follow up with design team',
-    '1. Review Q3 metrics dashboard\n2. Discuss hiring timeline for backend role\n3. Align on launch date for v2.0\n4. Schedule follow-up with design team',
-    signal
-  );
+  // Polish & replace
+  cursor.remove();
+  rawSpan.style.transition = 'opacity 0.2s';
+  rawSpan.style.opacity = '0';
+  await sleep(200, signal);
+  rawSpan.style.color = 'var(--text-primary)';
+  rawSpan.style.fontWeight = '500';
+  rawSpan.textContent = 'We need to fix the login bug.';
+  rawSpan.style.opacity = '1';
 
-  // ══════════════════════════════════════
-  // 4. GMAIL — email compose
-  // ══════════════════════════════════════
-  termTitle.textContent = 'Gmail';
-  termTitle.style.color = 'var(--red)';
-  resetTerm();
+  statusLeft.textContent = 'Pasted \u2713';
+  statusRight.textContent = '890ms';
+  await sleep(2500, signal);
 
-  const gmailBar = document.createElement('div');
-  gmailBar.className = 'gmail-bar';
-  gmailBar.innerHTML = '<button class="send-btn">Send</button><span class="icon-btn">A</span><span class="icon-btn">\u{1F4CE}</span><span style="margin-left:auto; color:#333">\u2716</span>';
-  wrapper.appendChild(gmailBar);
+  // ── Scene 3: List formatting ──
+  term.innerHTML = '';
+  statusLeft.textContent = 'Listening...';
+  statusRight.textContent = '';
+  addLine('<span class="prompt">\u276F </span><span class="cmd">airtype</span>');
+  addLine('');
 
-  const gmTo = document.createElement('div');
-  gmTo.className = 'gmail-field';
-  gmTo.innerHTML = '<span class="label">To</span><span class="value">michael@company.com</span>';
-  wrapper.appendChild(gmTo);
+  const recLine2 = addLine('');
+  await animateBar(recLine2, 3000, signal);
 
-  const gmSubj = document.createElement('div');
-  gmSubj.className = 'gmail-subject';
-  gmSubj.innerHTML = '<span class="label">Subject</span><span class="value">Follow up</span>';
-  wrapper.appendChild(gmSubj);
+  statusLeft.textContent = 'Processing...';
+  recLine2.innerHTML = '';
+  const rawSpan2 = document.createElement('span');
+  rawSpan2.style.color = 'var(--text-muted)';
+  recLine2.appendChild(rawSpan2);
+  const cursor2 = document.createElement('span');
+  cursor2.className = 'cursor-blink';
+  cursor2.textContent = '\u2588';
+  recLine2.appendChild(cursor2);
 
-  const gmBody = document.createElement('div');
-  gmBody.className = 'gmail-body';
-  gmBody.id = 'term';
-  wrapper.appendChild(gmBody);
-  term = gmBody;
+  await typeText(rawSpan2, 'first review Q3 metrics second discuss hiring timeline third align on launch date', 14, signal);
+  await sleep(400, signal);
 
-  await rawThenFormat(term,
-    'hi michael new line just following up on our meeting last friday period I wanted to confirm next steps new line you will send over the revised proposal by wednesday new line I will loop in the design team for review new line we will reconvene next monday to finalize new line let me know if anything changes new line best comma chris',
-    'Hi Michael,\n\nJust following up on our meeting last Friday. I wanted to confirm next steps:\n\n1. You\'ll send over the revised proposal by Wednesday.\n2. I\'ll loop in the design team for review.\n3. We\'ll reconvene next Monday to finalize.\n\nLet me know if anything changes.\n\nBest,\nChris',
-    signal
-  );
+  cursor2.remove();
+  rawSpan2.style.transition = 'opacity 0.2s';
+  rawSpan2.style.opacity = '0';
+  await sleep(200, signal);
+
+  recLine2.innerHTML = '';
+  const formatted = document.createElement('span');
+  formatted.style.color = 'var(--text-primary)';
+  formatted.style.fontWeight = '500';
+  formatted.innerHTML = '1. Review Q3 metrics<br>2. Discuss hiring timeline<br>3. Align on launch date';
+  recLine2.appendChild(formatted);
+
+  statusLeft.textContent = 'Pasted \u2713';
+  statusRight.textContent = '1.2s';
+  await sleep(2500, signal);
+
+  // ── Scene 4: Email ──
+  term.innerHTML = '';
+  statusLeft.textContent = 'Listening...';
+  statusRight.textContent = '';
+  addLine('<span class="prompt">\u276F </span><span class="cmd">airtype</span>');
+  addLine('');
+
+  const recLine3 = addLine('');
+  await animateBar(recLine3, 3500, signal);
+
+  statusLeft.textContent = 'Processing...';
+  recLine3.innerHTML = '';
+  const rawSpan3 = document.createElement('span');
+  rawSpan3.style.color = 'var(--text-muted)';
+  recLine3.appendChild(rawSpan3);
+  const cursor3 = document.createElement('span');
+  cursor3.className = 'cursor-blink';
+  cursor3.textContent = '\u2588';
+  recLine3.appendChild(cursor3);
+
+  await typeText(rawSpan3, 'hi michael new line just following up on our meeting period you will send the proposal by wednesday new line best comma chris', 12, signal);
+  await sleep(400, signal);
+
+  cursor3.remove();
+  rawSpan3.style.transition = 'opacity 0.2s';
+  rawSpan3.style.opacity = '0';
+  await sleep(200, signal);
+
+  recLine3.innerHTML = '';
+  const emailFormatted = document.createElement('span');
+  emailFormatted.style.color = 'var(--text-primary)';
+  emailFormatted.style.fontWeight = '500';
+  emailFormatted.innerHTML = 'Hi Michael,<br><br>Just following up on our meeting. You\'ll send the proposal by Wednesday.<br><br>Best,<br>Chris';
+  recLine3.appendChild(emailFormatted);
+
+  statusLeft.textContent = 'Pasted \u2713';
+  statusRight.textContent = '1.4s';
+  await sleep(3000, signal);
 }
 
 async function loop() {
@@ -586,20 +643,18 @@ async function loop() {
     }
   }
 }
-
 loop();
 
-function copyHandler(e) {
+// Copy install command
+document.getElementById('copy-btn').addEventListener('click', (e) => {
   e.preventDefault();
   navigator.clipboard.writeText('bun add -g @superdots/airtype');
-  const el = e.currentTarget;
-  const orig = el.textContent;
-  el.textContent = 'copied!';
-  el.style.color = 'var(--green)';
-  setTimeout(() => { el.textContent = orig; el.style.color = ''; }, 1500);
-}
-document.getElementById('copy-btn').addEventListener('click', copyHandler);
-document.getElementById('copy-top').addEventListener('click', copyHandler);
+  const label = e.currentTarget.querySelector('.copy-label');
+  const orig = label.textContent;
+  label.textContent = 'Copied!';
+  label.style.color = 'var(--accent-green)';
+  setTimeout(() => { label.textContent = orig; label.style.color = ''; }, 1500);
+});
 </script>
 
 </body>
