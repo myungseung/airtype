@@ -7,3 +7,4 @@ recordings/
 .npmrc
 /tmp/
 .vercel
+.claude/

@@ -3,443 +3,604 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Airtype</title>
+  <title>Airtype — Speak and it types</title>
   <meta name="description" content="Hands-free voice transcription for macOS.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     :root {
       --bg: #0c0c0c;
-      --text: #c8c8c8;
+      --border: #1a1a1a;
+      --text: #d4d4d4;
       --dim: #555;
-      --accent: #22d3ee;
+      --cyan: #10b981;
+      --green: #10b981;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --purple: #a78bfa;
       --mono: 'JetBrains Mono', monospace;
     }
-
-    body {
+    html, body {
+      height: 100%;
+      overflow: hidden;
       font-family: var(--mono);
       background: var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
     }
-
-    ::selection {
-      background: var(--accent);
-      color: #000;
-    }
-
+    ::selection { background: var(--cyan); color: #000; }
     a { color: var(--text); text-decoration: none; }
-    a:hover { color: #fff; }
 
-    /* ── Nav ── */
+    .page {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px 32px;
+    }
+
     nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 32px 40px;
-      max-width: 1200px;
-      margin: 0 auto;
-      font-size: 13px;
+      padding-bottom: 16px;
+      font-size: 12px;
     }
-    nav .logo {
-      font-weight: 700;
-      font-size: 14px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-    }
-    nav .links { display: flex; gap: 28px; }
+    nav .logo { font-weight: 700; letter-spacing: 3px; font-size: 13px; }
+    nav .links { display: flex; gap: 20px; }
     nav .links a { color: var(--dim); transition: color 0.2s; }
     nav .links a:hover { color: var(--text); }
 
-    /* ── Hero ── */
     .hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: calc(100vh - 80px);
-      padding: 0 40px;
       text-align: center;
+      padding: 24px 0 20px;
     }
-
-    .ascii {
-      font-size: 11px;
+    .hero .ascii {
+      font-size: 8px;
       line-height: 1.3;
-      color: var(--dim);
+      color: var(--cyan);
       white-space: pre;
-      margin-bottom: 48px;
-      opacity: 0;
-      animation: fadeIn 1s ease forwards 0.2s;
+      margin-bottom: 6px;
+      opacity: 0.7;
     }
-
-    .hero h1 {
-      font-size: 14px;
-      font-weight: 400;
-      letter-spacing: 6px;
-      text-transform: uppercase;
-      color: var(--dim);
-      margin-bottom: 20px;
-      opacity: 0;
-      animation: fadeIn 1s ease forwards 0.6s;
+    .hero .sub {
+      font-size: 11px;
+      color: #282828;
+      letter-spacing: 4px;
     }
-
-    .tagline {
-      font-size: 32px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      line-height: 1.3;
-      max-width: 500px;
-      margin-bottom: 48px;
-      opacity: 0;
-      animation: fadeIn 1s ease forwards 0.8s;
-    }
-
-    .cta {
-      font-family: var(--mono);
+    .hero .tagline {
       font-size: 13px;
       color: var(--dim);
-      border: 1px solid #282828;
-      padding: 14px 28px;
-      border-radius: 4px;
-      transition: all 0.3s ease;
-      opacity: 0;
-      animation: fadeIn 1s ease forwards 1s;
-      cursor: pointer;
-      background: none;
+      margin-top: 12px;
+      letter-spacing: 1px;
     }
-    .cta:hover {
+    .hero .tagline strong {
       color: var(--text);
-      border-color: #444;
-    }
-
-    .scroll-hint {
-      position: absolute;
-      bottom: 32px;
-      font-size: 11px;
-      color: #333;
-      letter-spacing: 3px;
-      animation: pulse 3s ease-in-out infinite 2s;
-    }
-
-    /* ── Demo ── */
-    .demo {
-      max-width: 580px;
-      margin: 0 auto;
-      padding: 120px 40px;
+      font-weight: 700;
     }
 
     .term {
-      border: 1px solid #1a1a1a;
-      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
       overflow: hidden;
-    }
-
-    .term-bar {
-      display: flex;
-      gap: 6px;
-      padding: 10px 14px;
-      background: #111;
-    }
-    .term-bar span {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #282828;
-    }
-
-    .term-body {
-      padding: 20px;
-      font-size: 13px;
-      line-height: 2;
-      background: #0f0f0f;
-    }
-    .term-body .p { color: #4ade80; }
-    .term-body .c { color: var(--text); }
-    .term-body .o { color: var(--accent); }
-    .term-body .d { color: #333; }
-
-    /* ── Sections ── */
-    .section {
-      max-width: 580px;
-      margin: 0 auto;
-      padding: 80px 40px;
-    }
-
-    .section h2 {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--dim);
-      margin-bottom: 40px;
-    }
-
-    .section p {
-      font-size: 14px;
-      line-height: 1.9;
-      color: #777;
-      margin-bottom: 20px;
-    }
-
-    .section p strong {
-      color: var(--text);
-      font-weight: 400;
-    }
-
-    /* ── Steps ── */
-    .steps {
       display: flex;
       flex-direction: column;
-      gap: 0;
-      counter-reset: step;
+      min-height: 0;
     }
-    .step {
-      padding: 20px 0;
-      border-bottom: 1px solid #161616;
-      font-size: 14px;
-      color: #777;
+    .term-bar {
       display: flex;
-      gap: 20px;
-    }
-    .step::before {
-      counter-increment: step;
-      content: counter(step);
-      color: #333;
-      font-size: 12px;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 16px;
+      background: #161616;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
-      width: 20px;
-      text-align: right;
     }
-    .step strong { color: var(--text); font-weight: 400; }
-
-    /* ── Langs ── */
-    .langs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .lang {
-      font-size: 12px;
-      padding: 6px 14px;
-      border: 1px solid #1a1a1a;
-      border-radius: 3px;
-      color: #555;
-    }
-
-    /* ── Pricing ── */
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1px;
-      background: #1a1a1a;
-      border: 1px solid #1a1a1a;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-    .plan {
-      background: var(--bg);
-      padding: 32px;
-    }
-    .plan h3 {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--dim);
-      margin-bottom: 16px;
-    }
-    .plan .price {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .plan .price span {
-      font-size: 12px;
-      font-weight: 400;
-      color: var(--dim);
-    }
-    .plan .note {
-      font-size: 12px;
-      color: #333;
-      margin-bottom: 20px;
-    }
-    .plan ul {
-      list-style: none;
-      font-size: 12px;
-      color: #555;
-    }
-    .plan ul li {
-      padding: 5px 0;
-    }
-    .plan ul li::before {
-      content: "~ ";
-      color: #333;
-    }
-
-    /* ── Install ── */
-    .install-block {
-      background: #0f0f0f;
-      border: 1px solid #1a1a1a;
-      border-radius: 6px;
-      padding: 24px;
-      font-size: 13px;
-      line-height: 2.2;
-    }
-    .install-block .d { color: #333; }
-    .install-block .c { color: var(--text); }
-
-    /* ── Footer ── */
-    footer {
+    .term-bar .dot { width: 10px; height: 10px; border-radius: 50%; background: #282828; }
+    .term-bar .title {
+      flex: 1;
       text-align: center;
-      padding: 60px 40px;
+      font-size: 11px;
+      color: #333;
+      margin-right: 36px;
+      transition: color 0.3s;
+    }
+    .term-bar .rec-badge {
+      font-size: 10px;
+      color: var(--red);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .term-bar .rec-badge.on {
+      animation: recPulse 1s ease-in-out infinite;
+    }
+    @keyframes recPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .term-body {
+      flex: 1;
+      padding: 20px 24px;
+      font-size: 13px;
+      line-height: 1.7;
+      background: #0e0e0e;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .tui-divider { color: #1a1a1a; margin: 8px 0; font-size: 12px; }
+
+    .state-line {
+      font-size: 13px;
+      min-height: 22px;
+      margin: 2px 0;
+    }
+    .state-line .green { color: var(--green); font-weight: 700; }
+    .state-line .red { color: var(--red); font-weight: 700; }
+    .state-line .yellow { color: var(--yellow); }
+    .state-line .cyan { color: var(--cyan); }
+    .state-line .purple { color: var(--purple); }
+    .state-line .orange { color: #f59e0b; }
+    .state-line .dim { color: #333; }
+    .state-line .prompt { color: var(--green); }
+    .state-line .cmd { color: var(--text); }
+    .state-line .out { color: var(--dim); }
+    .state-line .result { color: var(--text); font-weight: 700; }
+    .speech-bar { color: var(--cyan); }
+
+    /* ── Claude Code UI ── */
+    .cc-tool { margin: 6px 0; }
+    .cc-tool-name { color: #f59e0b; font-weight: 700; font-size: 13px; }
+    .cc-tool-path { color: var(--text); font-size: 13px; }
+    .cc-tool-sub { color: var(--dim); font-size: 12px; padding-left: 16px; }
+    .cc-bullet { font-size: 13px; margin: 6px 0; line-height: 1.6; color: var(--text); }
+    .cc-bullet::before { content: "\25CF "; color: var(--text); font-size: 8px; vertical-align: middle; }
+    .cc-diff { font-family: var(--mono); font-size: 12px; margin: 4px 0 4px 16px; padding: 2px 6px; border-radius: 3px; }
+    .cc-diff-del { background: rgba(248,113,113,0.15); color: var(--red); }
+    .cc-diff-add { background: rgba(16,185,129,0.15); color: var(--green); }
+    .cc-diff-ctx { color: var(--dim); }
+    .cc-linenum { color: #333; display: inline-block; width: 24px; text-align: right; margin-right: 8px; }
+    .cc-status { font-size: 12px; margin: 8px 0; }
+    .cc-input-box {
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0 6px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+    }
+    .cc-input-box .cc-caret {
+      display: inline-block;
+      width: 2px;
+      height: 16px;
+      background: var(--text);
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .cc-input-box .cc-prompt-char { color: var(--dim); }
+    .cc-footer-hint { font-size: 11px; color: #333; }
+    .cc-footer-hint .hl { color: var(--dim); }
+
+    /* ── Editor UI ── */
+    .editor-toolbar {
+      display: flex;
+      gap: 16px;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      color: #333;
+      background: #131313;
+    }
+    .editor-toolbar span { cursor: default; }
+    .editor-toolbar .active { color: var(--dim); }
+    .editor-body {
+      flex: 1;
+      padding: 20px 24px;
+      font-size: 14px;
+      line-height: 1.8;
+      background: #0e0e0e;
+      overflow-y: auto;
+      color: var(--text);
+    }
+    .editor-body .placeholder { color: #282828; }
+    .editor-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 16px;
+      background: var(--text);
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+
+    /* ── Gmail UI ── */
+    .gmail-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #131313;
+      font-size: 12px;
+    }
+    .gmail-bar .send-btn {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 16px;
+      font-family: var(--mono);
+      font-size: 11px;
+      cursor: default;
+    }
+    .gmail-bar .icon-btn { color: #333; cursor: default; }
+    .gmail-field {
+      display: flex;
+      padding: 8px 16px;
+      border-bottom: 1px solid #161616;
+      font-size: 12px;
+    }
+    .gmail-field .label { color: #333; width: 50px; flex-shrink: 0; }
+    .gmail-field .value { color: var(--dim); }
+    .gmail-subject {
+      display: flex;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .gmail-subject .label { color: #333; width: 70px; flex-shrink: 0; }
+    .gmail-subject .value { color: var(--text); font-weight: 700; }
+    .gmail-body {
+      flex: 1;
+      padding: 16px 24px;
+      font-size: 13px;
+      line-height: 1.8;
+      background: #0e0e0e;
+      overflow-y: auto;
+      color: var(--text);
+    }
+
+    .foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
       font-size: 11px;
       color: #282828;
-      letter-spacing: 2px;
     }
-
-    /* ── Animations ── */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+    .foot a { color: #333; }
+    .foot a:hover { color: var(--dim); }
+    .foot .install-cmd {
+      color: var(--dim);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 4px;
+      transition: color 0.2s, border-color 0.2s;
+      cursor: pointer;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.8; }
-    }
+    .foot .install-cmd:hover { color: var(--text); border-color: #333; }
 
     @media (max-width: 600px) {
-      nav { padding: 24px 20px; }
-      .hero { padding: 0 20px; }
-      .ascii { font-size: 7px; }
-      .tagline { font-size: 24px; }
-      .section, .demo { padding-left: 20px; padding-right: 20px; }
-      .pricing-grid { grid-template-columns: 1fr; }
+      .page { padding: 12px 12px; }
+      .term-body { padding: 14px 16px; font-size: 12px; }
+      .hero .ascii { font-size: 7px; }
     }
   </style>
 </head>
 <body>
 
-<nav>
-  <div class="logo">Airtype</div>
-  <div class="links">
-    <a href="#how">How</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#install">Install</a>
-  </div>
-</nav>
-
-<section class="hero">
-  <div class="ascii">
+<div class="page">
+  <div class="hero">
+    <div class="ascii">
  █████╗ ██╗██████╗ ████████╗██╗   ██╗██████╗ ███████╗
 ██╔══██╗██║██╔══██╗╚══██╔══╝╚██╗ ██╔╝██╔══██╗██╔════╝
 ███████║██║██████╔╝   ██║    ╚████╔╝ ██████╔╝█████╗
 ██╔══██║██║██╔══██╗   ██║     ╚██╔╝  ██╔═══╝ ██╔══╝
 ██║  ██║██║██║  ██║   ██║      ██║   ██║     ███████╗
 ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝     ╚══════╝</div>
-  <h1>Hands-free transcription</h1>
-  <div class="tagline">Speak. It types.</div>
-  <a href="#install" class="cta">bun add -g @superdots/airtype</a>
-  <div class="scroll-hint">scroll</div>
-</section>
+    <a href="#" class="install-box" id="copy-top" style="display:inline-block; margin-top:10px; padding:8px 20px; border:1px solid #282828; border-radius:5px; font-size:12px; color:var(--dim); letter-spacing:1px; transition: color 0.2s, border-color 0.2s; cursor:pointer; text-decoration:none;">bun add -g @superdots/airtype</a>
+  </div>
 
-<div class="demo">
   <div class="term">
-    <div class="term-bar"><span></span><span></span><span></span></div>
-    <div class="term-body">
-      <div><span class="p">$</span> <span class="c">airtype</span></div>
-      <div><span class="d">  ● Ready — Cmd+Esc to record</span></div>
-      <div>&nbsp;</div>
-      <div><span class="d">  [recording...]</span></div>
-      <div><span class="d">  "um so I think... no wait... we need to fix the bug"</span></div>
-      <div>&nbsp;</div>
-      <div><span class="o">  &gt; We need to fix the bug.</span></div>
-      <div><span class="d">  890ms — pasted</span></div>
+    <div class="term-bar">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="title" id="term-title">Terminal</div>
     </div>
+    <div class="term-body" id="term"></div>
+  </div>
+
+  <div class="foot">
+    <span>&copy; 2025 myungseung</span>
+    <a href="#" class="install-cmd" id="copy-btn">bun add -g @superdots/airtype</a>
   </div>
 </div>
 
-<section class="section" id="how">
-  <h2>How it works</h2>
-  <div class="steps">
-    <div class="step"><strong>Press your shortcut.</strong> Recording starts. A sound confirms.</div>
-    <div class="step"><strong>Speak naturally.</strong> Hesitate, repeat, self-correct. Airtype handles it.</div>
-    <div class="step"><strong>Press again.</strong> Transcribed, polished, pasted at your cursor. Under 2 seconds.</div>
-  </div>
-</section>
+<script>
+let term = document.getElementById('term');
+const termTitle = document.getElementById('term-title');
+let abortCtrl = null;
 
-<section class="section">
-  <h2>What it does</h2>
-  <p><strong>Removes filler.</strong> "Um", "uh", false starts, stutters — gone.</p>
-  <p><strong>Formats smartly.</strong> Lists get numbered. Emails get line breaks. Punctuation appears where it should.</p>
-  <p><strong>Works everywhere.</strong> Any app that accepts text. Terminal, browser, Slack, VS Code, mail.</p>
-  <p><strong>No API keys.</strong> Runs through a secure proxy. Install and go.</p>
-</section>
+function sleep(ms, signal) {
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(resolve, ms);
+    if (signal) signal.addEventListener('abort', () => { clearTimeout(id); reject(new DOMException('Aborted','AbortError')); });
+  });
+}
 
-<section class="section">
-  <h2>Languages</h2>
-  <p>Input and output are independent. Speak Korean, get English. Or any combination.</p>
-  <div class="langs">
-    <span class="lang">English</span>
-    <span class="lang">Korean</span>
-    <span class="lang">Japanese</span>
-    <span class="lang">Chinese</span>
-    <span class="lang">Spanish</span>
-    <span class="lang">French</span>
-    <span class="lang">German</span>
-  </div>
-</section>
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-<section class="section" id="pricing">
-  <h2>Pricing</h2>
-  <div class="pricing-grid">
-    <div class="plan">
-      <h3>Free</h3>
-      <div class="price">$0</div>
-      <div class="note">10,000 words / week</div>
-      <ul>
-        <li>All languages</li>
-        <li>Smart formatting</li>
-        <li>Auto paste</li>
-      </ul>
-    </div>
-    <div class="plan">
-      <h3>Pro</h3>
-      <div class="price">$9 <span>/ mo</span></div>
-      <div class="note">Unlimited</div>
-      <ul>
-        <li>Everything in Free</li>
-        <li>Unlimited words</li>
-        <li>Priority support</li>
-      </ul>
-    </div>
-  </div>
-</section>
+async function typeText(el, text, speed, signal) {
+  for (let i = 0; i < text.length; i++) {
+    if (signal?.aborted) throw new DOMException('Aborted','AbortError');
+    el.innerHTML += text[i] === '\n' ? '<br>' : esc(text[i]);
+    await sleep(speed, signal);
+  }
+}
 
-<section class="section" id="install">
-  <h2>Install</h2>
-  <div class="install-block">
-    <div><span class="d"># prerequisites</span></div>
-    <div><span class="c">brew install sox switchaudio-osx</span></div>
-    <div><span class="c">curl -fsSL https://bun.sh/install | bash</span></div>
-    <div>&nbsp;</div>
-    <div><span class="d"># install</span></div>
-    <div><span class="c">bun add -g @superdots/airtype</span></div>
-    <div>&nbsp;</div>
-    <div><span class="d"># run</span></div>
-    <div><span class="c">airtype</span></div>
-  </div>
-</section>
+function addLine(html) {
+  const div = document.createElement('div');
+  div.className = 'state-line';
+  div.innerHTML = html;
+  term.appendChild(div);
+  return div;
+}
 
-<section class="section">
-  <h2>Requirements</h2>
-  <p>macOS. Bun. sox. Accessibility permission.</p>
-</section>
+function barFrame(level) {
+  const w = 20, f = Math.round(level * w);
+  return '[' + '\u2588'.repeat(f) + '\u2591'.repeat(w - f) + ']';
+}
 
-<footer>AIRTYPE</footer>
+async function animateBar(el, ms, signal) {
+  const start = Date.now();
+  while (Date.now() - start < ms) {
+    if (signal?.aborted) throw new DOMException('Aborted','AbortError');
+    const t = (Date.now() - start) / ms;
+    const level = Math.min(1, Math.max(0, 0.2 + Math.sin(t * Math.PI * 6) * 0.3 + Math.random() * 0.2));
+    el.innerHTML = '<span class="red" style="font-weight:700">\u25CF Recording  </span><span class="speech-bar">' + barFrame(level) + '</span>';
+    await sleep(80, signal);
+  }
+}
+
+async function typePrompt(id, text, speed, signal) {
+  addLine('<span class="prompt">\u276F</span> <span class="cmd" id="' + id + '"></span>');
+  await typeText(document.getElementById(id), text, speed, signal);
+}
+
+// helper: recording bar animation in element
+async function recBar(el, ms, signal) {
+  const start = Date.now();
+  while (Date.now() - start < ms) {
+    if (signal?.aborted) throw new DOMException('Aborted','AbortError');
+    const t = (Date.now() - start) / ms;
+    const lv = Math.min(1, Math.max(0, 0.2 + Math.sin(t * Math.PI * 6) * 0.3 + Math.random() * 0.2));
+    el.innerHTML = '<span class="red" style="font-weight:700">\u25CF Recording  </span><span class="speech-bar">' + barFrame(lv) + '</span>';
+    await sleep(80, signal);
+  }
+}
+
+// helper: recording label + raw text → thinking → instant replace
+async function rawThenFormat(container, rawText, formatted, signal) {
+  container.innerHTML = '';
+
+  // recording label (red, blinking)
+  const recLabel = document.createElement('div');
+  recLabel.style.marginBottom = '8px';
+  recLabel.innerHTML = '<span style="color:var(--red); font-size:11px; animation: recPulse 1s ease-in-out infinite;">\u25CF recording...</span>';
+  container.appendChild(recLabel);
+
+  const rawEl = document.createElement('span');
+  rawEl.style.color = '#666';
+  container.appendChild(rawEl);
+  const cursor = document.createElement('span');
+  cursor.className = 'editor-cursor';
+  container.appendChild(cursor);
+
+  // type raw text (recording stays visible throughout)
+  await typeText(rawEl, rawText, 14, signal);
+  await sleep(500, signal);
+
+  // instant replace
+  recLabel.remove();
+  cursor.remove();
+  rawEl.style.color = 'var(--text)';
+  rawEl.innerHTML = esc(formatted).replace(/\n/g, '<br>');
+  await sleep(2000, signal);
+}
+
+// swap term-body with custom content
+function setTermContent(html) {
+  const wrapper = document.querySelector('.term');
+  const oldBody = document.getElementById('term');
+  const bar = wrapper.querySelector('.term-bar');
+  // remove everything after bar
+  while (bar.nextSibling) bar.nextSibling.remove();
+  // insert new content
+  const div = document.createElement('div');
+  div.id = 'term';
+  div.innerHTML = html;
+  wrapper.appendChild(div);
+  return div;
+}
+
+async function play(signal) {
+  const wrapper = document.querySelector('.term');
+  const bar = wrapper.querySelector('.term-bar');
+
+  function resetTerm() { while (bar.nextSibling) bar.nextSibling.remove(); }
+
+  // ══════════════════════════════════════
+  // 1. INSTALL + FIRST RECORDING
+  // ══════════════════════════════════════
+  termTitle.textContent = 'Terminal';
+  termTitle.style.color = '#333';
+  resetTerm();
+  const t1 = document.createElement('div');
+  t1.className = 'term-body';
+  t1.id = 'term';
+  wrapper.appendChild(t1);
+  term = t1;
+
+  await typePrompt('i1', 'bun add -g @superdots/airtype', 20, signal);
+  await sleep(600, signal);
+  addLine('<span class="out">  + @superdots/airtype@0.4.0</span>');
+  await sleep(400, signal);
+  addLine('<span class="green">  \u2713 Installed</span>');
+  await sleep(800, signal);
+
+  addLine('');
+  await typePrompt('i2', 'airtype', 50, signal);
+  await sleep(600, signal);
+
+  // first recording
+  addLine('');
+  const rawArea = document.createElement('div');
+  rawArea.className = 'state-line';
+  rawArea.style.marginTop = '8px';
+  term.appendChild(rawArea);
+
+  await rawThenFormat(rawArea,
+    'Um so I think... no wait... we need to fix the login bug',
+    'We need to fix the login bug.',
+    signal
+  );
+  addLine('<span class="dim" style="font-size:11px">890ms \u2014 pasted \u2713</span>');
+
+  // ══════════════════════════════════════
+  // 2. CLAUDE CODE
+  // ══════════════════════════════════════
+  termTitle.textContent = '\u2731 claude';
+  termTitle.style.color = 'var(--purple)';
+  resetTerm();
+
+  const ccBody = document.createElement('div');
+  ccBody.className = 'term-body';
+  ccBody.id = 'term';
+  ccBody.innerHTML = ''
+    + '<div class="cc-tool"><span class="cc-tool-name">\u25CF Read</span><span class="cc-tool-path">(src/auth/middleware.ts)</span></div>'
+    + '<div class="cc-tool-sub">\u2514 Read <strong>142</strong> lines (ctrl+r to expand)</div>'
+    + '<div class="cc-bullet">I can see the middleware uses session cookies. Let me refactor it to use JWT.</div>'
+    + '<div class="cc-tool" style="margin-top:10px"><span class="cc-tool-name">\u25CF Update</span><span class="cc-tool-path">(src/auth/middleware.ts)</span></div>'
+    + '<div class="cc-tool-sub">\u2514 Updated with <strong>3</strong> additions and <strong>1</strong> removal</div>'
+    + '<div class="cc-diff cc-diff-ctx"><span class="cc-linenum">1</span>  import express from &quot;express&quot;;</div>'
+    + '<div class="cc-diff cc-diff-del"><span class="cc-linenum">2</span>- import { sessionStore } from &quot;./sessions&quot;;</div>'
+    + '<div class="cc-diff cc-diff-add"><span class="cc-linenum">2</span>+ import { verifyJWT } from &quot;./jwt&quot;;</div>'
+    + '<div class="cc-diff cc-diff-add"><span class="cc-linenum">3</span>+ import { sessionStore } from &quot;./sessions&quot;; // compat</div>'
+    + '<div class="cc-status"><span class="orange">\u2731</span> <span style="color:var(--dim)">Done (8s \u00B7 312 tokens)</span></div>';
+  wrapper.appendChild(ccBody);
+  term = ccBody;
+
+  const inputBox = document.createElement('div');
+  inputBox.className = 'cc-input-box';
+  inputBox.innerHTML = '<span class="cc-prompt-char">&gt;</span> <span class="cc-caret"></span>';
+  term.appendChild(inputBox);
+  const footHint = document.createElement('div');
+  footHint.className = 'cc-footer-hint';
+  footHint.innerHTML = '\u25B6\u25B6 <span class="hl">auto-accept edits on</span> (shift+tab to cycle)';
+  term.appendChild(footHint);
+  term.scrollTop = term.scrollHeight;
+  await sleep(500, signal);
+
+  // raw then format in input box
+  const ibContent = document.createElement('span');
+  inputBox.innerHTML = '<span class="cc-prompt-char">&gt;</span> ';
+  inputBox.appendChild(ibContent);
+  await rawThenFormat(ibContent,
+    'um add rate limiting to the uh JWT verification thing with like 100 requests per minute',
+    'Add rate limiting to the JWT verification with a 100 req/min window.',
+    signal
+  );
+  term.scrollTop = term.scrollHeight;
+
+  // ══════════════════════════════════════
+  // 3. TEXT EDITOR — smart formatting
+  // ══════════════════════════════════════
+  termTitle.textContent = 'Editor';
+  termTitle.style.color = 'var(--dim)';
+  resetTerm();
+
+  const edToolbar = document.createElement('div');
+  edToolbar.className = 'editor-toolbar';
+  edToolbar.innerHTML = '<span class="active">File</span><span>Edit</span><span>View</span><span style="margin-left:auto; color:#282828">meeting-notes.md</span>';
+  wrapper.appendChild(edToolbar);
+
+  const edBody = document.createElement('div');
+  edBody.className = 'editor-body';
+  edBody.id = 'term';
+  wrapper.appendChild(edBody);
+  term = edBody;
+
+  await rawThenFormat(term,
+    'first review Q3 metrics dashboard second discuss hiring timeline for the backend role third align on launch date for v2 fourth schedule follow up with design team',
+    '1. Review Q3 metrics dashboard\n2. Discuss hiring timeline for backend role\n3. Align on launch date for v2.0\n4. Schedule follow-up with design team',
+    signal
+  );
+
+  // ══════════════════════════════════════
+  // 4. GMAIL — email compose
+  // ══════════════════════════════════════
+  termTitle.textContent = 'Gmail';
+  termTitle.style.color = 'var(--red)';
+  resetTerm();
+
+  const gmailBar = document.createElement('div');
+  gmailBar.className = 'gmail-bar';
+  gmailBar.innerHTML = '<button class="send-btn">Send</button><span class="icon-btn">A</span><span class="icon-btn">\u{1F4CE}</span><span style="margin-left:auto; color:#333">\u2716</span>';
+  wrapper.appendChild(gmailBar);
+
+  const gmTo = document.createElement('div');
+  gmTo.className = 'gmail-field';
+  gmTo.innerHTML = '<span class="label">To</span><span class="value">michael@company.com</span>';
+  wrapper.appendChild(gmTo);
+
+  const gmSubj = document.createElement('div');
+  gmSubj.className = 'gmail-subject';
+  gmSubj.innerHTML = '<span class="label">Subject</span><span class="value">Follow up</span>';
+  wrapper.appendChild(gmSubj);
+
+  const gmBody = document.createElement('div');
+  gmBody.className = 'gmail-body';
+  gmBody.id = 'term';
+  wrapper.appendChild(gmBody);
+  term = gmBody;
+
+  await rawThenFormat(term,
+    'hi michael new line just following up on our meeting last friday period I wanted to confirm next steps new line you will send over the revised proposal by wednesday new line I will loop in the design team for review new line we will reconvene next monday to finalize new line let me know if anything changes new line best comma chris',
+    'Hi Michael,\n\nJust following up on our meeting last Friday. I wanted to confirm next steps:\n\n1. You\'ll send over the revised proposal by Wednesday.\n2. I\'ll loop in the design team for review.\n3. We\'ll reconvene next Monday to finalize.\n\nLet me know if anything changes.\n\nBest,\nChris',
+    signal
+  );
+}
+
+async function loop() {
+  while (true) {
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController();
+    try {
+      await play(abortCtrl.signal);
+    } catch(e) {
+      if (e.name !== 'AbortError') throw e;
+    }
+  }
+}
+
+loop();
+
+function copyHandler(e) {
+  e.preventDefault();
+  navigator.clipboard.writeText('bun add -g @superdots/airtype');
+  const el = e.currentTarget;
+  const orig = el.textContent;
+  el.textContent = 'copied!';
+  el.style.color = 'var(--green)';
+  setTimeout(() => { el.textContent = orig; el.style.color = ''; }, 1500);
+}
+document.getElementById('copy-btn').addEventListener('click', copyHandler);
+document.getElementById('copy-top').addEventListener('click', copyHandler);
+</script>
 
 </body>
 </html>
