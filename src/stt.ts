@@ -10,6 +10,8 @@ export async function transcribe(wavBuffer: Buffer, language: string): Promise<S
 
   const formData = new FormData();
   formData.append("file", new Blob([wavBuffer], { type: "audio/wav" }), "audio.wav");
+  formData.append("model", "whisper-large-v3");
+  formData.append("response_format", "json");
   if (language && language !== "auto") {
     formData.append("language", language);
   }

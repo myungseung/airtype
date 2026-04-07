@@ -1,33 +1,34 @@
-export default async function handler(req) {
-  if (req.method !== "POST") return new Response("POST only", { status: 405 });
+export const config = { api: { bodyParser: false } };
 
-  if (req.headers.get("x-airtype-client") !== "cli") {
-    return new Response("Unauthorized", { status: 403 });
+export default async function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).send("POST only");
+
+  if (req.headers["x-airtype-client"] !== "cli") {
+    return res.status(403).send("Unauthorized");
   }
 
   const groqKey = process.env.GROQ_API_KEY;
-  if (!groqKey) return new Response("Server key missing", { status: 500 });
+  if (!groqKey) return res.status(500).send("Server key missing");
 
-  const formData = await req.formData();
-  const file = formData.get("file");
-  if (!file) return new Response("No file", { status: 400 });
+  try {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const body = Buffer.concat(chunks);
 
-  const proxyForm = new FormData();
-  proxyForm.append("file", file, "audio.wav");
-  proxyForm.append("model", "whisper-large-v3");
-  proxyForm.append("response_format", "json");
+    const contentType = req.headers["content-type"];
 
-  const lang = formData.get("language");
-  if (lang && lang !== "auto") proxyForm.append("language", lang);
+    const resp = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${groqKey}`,
+        "Content-Type": contentType,
+      },
+      body,
+    });
 
-  const resp = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${groqKey}` },
-    body: proxyForm,
-  });
-
-  return new Response(await resp.text(), {
-    status: resp.status,
-    headers: { "Content-Type": "application/json" },
-  });
+    const text = await resp.text();
+    res.status(resp.status).setHeader("Content-Type", "application/json").send(text);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
