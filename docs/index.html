@@ -209,28 +209,97 @@
     }
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 32px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
     }
-    .feature {
-      text-align: center;
+    .feature-card {
+      border: 1px solid var(--border-dim);
+      border-radius: 8px;
+      padding: 32px;
+      background: var(--bg-surface);
     }
-    .feature-icon {
-      font-size: 24px;
+    .feature-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       margin-bottom: 16px;
     }
+    .feature-logo {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
     .feature-title {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
+      letter-spacing: 1px;
       color: var(--text-primary);
-      margin-bottom: 12px;
     }
     .feature-desc {
       font-size: 12px;
       color: var(--text-muted);
       line-height: 1.7;
+    }
+
+    /* ── SMART FORMATTING ── */
+    .smart-fmt {
+      padding: 0 0 80px;
+    }
+    .smart-fmt-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .smart-fmt-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .fmt-example {
+      border: 1px solid var(--border-dim);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg-surface);
+    }
+    .fmt-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-dim);
+    }
+    .fmt-label svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+    .fmt-body {
+      padding: 16px;
+    }
+    .fmt-raw {
+      font-size: 11px;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      font-style: italic;
+    }
+    .fmt-arrow {
+      color: var(--accent-green);
+      font-size: 10px;
+      margin-bottom: 12px;
+    }
+    .fmt-result {
+      font-size: 12px;
+      color: var(--text-primary);
+      line-height: 1.7;
+      font-weight: 500;
     }
 
     /* ── DIVIDER ── */
@@ -330,7 +399,8 @@
       .hero-ascii { font-size: 5px; margin-bottom: 24px; }
       .hero-title { font-size: 16px; }
       .hero-subtitle { font-size: 12px; }
-      .features-grid { grid-template-columns: 1fr; gap: 40px; }
+      .features-grid { grid-template-columns: 1fr; gap: 20px; }
+      .smart-fmt-grid { grid-template-columns: 1fr; gap: 20px; }
       .term-body { padding: 16px; font-size: 12px; min-height: 200px; }
       .pricing-card { padding: 24px 32px; }
       .nav-links a:not(.nav-cta) { display: none; }
@@ -394,20 +464,77 @@
 <section class="features" id="features">
   <div class="container">
     <div class="features-grid">
-      <div class="feature">
-        <div class="feature-icon">&#9889;</div>
-        <div class="feature-title">Extremely Lite</div>
-        <div class="feature-desc">Terminal-native. Zero Electron bloat. Instant startup with one command.</div>
+      <div class="feature-card">
+        <div class="feature-header">
+          <!-- Claude Code logo -->
+          <svg class="feature-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="7" fill="#D97706"/>
+            <path d="M16 7 L17.5 13.5 L24 12 L18.5 16 L24 20 L17.5 18.5 L16 25 L14.5 18.5 L8 20 L13.5 16 L8 12 L14.5 13.5 Z" fill="#FFF"/>
+          </svg>
+          <div class="feature-title">Claude Code Optimized</div>
+        </div>
+        <div class="feature-desc">Speak Korean (or any language), output clean English directly into Claude Code. Save tokens, code faster.</div>
       </div>
-      <div class="feature">
-        <div class="feature-icon">&#127760;</div>
-        <div class="feature-title">LLM Token Optimized</div>
-        <div class="feature-desc">Speak Korean (or any), output English directly into Claude Code.</div>
+      <div class="feature-card">
+        <div class="feature-header">
+          <svg class="feature-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="7" fill="#333"/>
+            <rect x="6" y="8" width="20" height="16" rx="2" stroke="#EDEDED" stroke-width="1.5" fill="none"/>
+            <line x1="6" y1="12" x2="26" y2="12" stroke="#EDEDED" stroke-width="1.5"/>
+            <circle cx="9" cy="10" r="1" fill="#F87171"/>
+            <circle cx="12" cy="10" r="1" fill="#FBBF24"/>
+            <circle cx="15" cy="10" r="1" fill="#4ADE80"/>
+          </svg>
+          <div class="feature-title">Works in Any App</div>
+        </div>
+        <div class="feature-desc">Terminal, browser, editor, email, Slack. Global shortcut works everywhere. Zero Electron bloat, instant startup.</div>
       </div>
-      <div class="feature">
-        <div class="feature-icon">&#129504;</div>
-        <div class="feature-title">Smart Formatting</div>
-        <div class="feature-desc">Auto-punctuation, casing, and keyword commands. Just say "new line".</div>
+    </div>
+  </div>
+</section>
+
+<!-- SMART FORMATTING -->
+<div class="section-divider">- - - - - -</div>
+
+<section class="smart-fmt">
+  <div class="container">
+    <div class="smart-fmt-label">SMART FORMATTING</div>
+    <div class="smart-fmt-grid">
+      <!-- Vibe Coding -->
+      <div class="fmt-example">
+        <div class="fmt-label">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M2 4l6-2 6 2v6l-6 4-6-4V4z" stroke="#4ADE80" stroke-width="1.2" fill="none"/><path d="M5 7l2 2 4-4" stroke="#4ADE80" stroke-width="1.2"/></svg>
+          VIBE CODING
+        </div>
+        <div class="fmt-body">
+          <div class="fmt-raw">"um fix the login bug and uh add rate limiting to the auth middleware thing"</div>
+          <div class="fmt-arrow">&darr;</div>
+          <div class="fmt-result">Fix the login bug and add rate limiting to the auth middleware.</div>
+        </div>
+      </div>
+      <!-- Email -->
+      <div class="fmt-example">
+        <div class="fmt-label">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="#4ADE80" stroke-width="1.2" fill="none"/><path d="M1 4.5l7 4.5 7-4.5" stroke="#4ADE80" stroke-width="1.2"/></svg>
+          EMAIL
+        </div>
+        <div class="fmt-body">
+          <div class="fmt-raw">"hi michael new line following up on our meeting period you will send the proposal by wednesday new line best comma chris"</div>
+          <div class="fmt-arrow">&darr;</div>
+          <div class="fmt-result">Hi Michael,<br><br>Following up on our meeting. You'll send the proposal by Wednesday.<br><br>Best,<br>Chris</div>
+        </div>
+      </div>
+      <!-- Note Taking -->
+      <div class="fmt-example">
+        <div class="fmt-label">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.5" stroke="#4ADE80" stroke-width="1.2" fill="none"/><line x1="5" y1="5" x2="11" y2="5" stroke="#4ADE80" stroke-width="1.2"/><line x1="5" y1="8" x2="11" y2="8" stroke="#4ADE80" stroke-width="1.2"/><line x1="5" y1="11" x2="9" y2="11" stroke="#4ADE80" stroke-width="1.2"/></svg>
+          NOTE TAKING
+        </div>
+        <div class="fmt-body">
+          <div class="fmt-raw">"first review Q3 metrics second discuss hiring timeline third align on launch date"</div>
+          <div class="fmt-arrow">&darr;</div>
+          <div class="fmt-result">1. Review Q3 metrics<br>2. Discuss hiring timeline<br>3. Align on launch date</div>
+        </div>
       </div>
     </div>
   </div>
