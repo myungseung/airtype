@@ -72,19 +72,6 @@
       transition: color 0.2s;
     }
     .nav-links a:hover { color: var(--text-primary); }
-    .nav-cta {
-      font-size: 11px;
-      padding: 6px 16px;
-      border: 1px solid var(--accent-green);
-      border-radius: 4px;
-      color: var(--accent-green) !important;
-      transition: background 0.2s, color 0.2s;
-    }
-    .nav-cta:hover {
-      background: var(--accent-green);
-      color: #000 !important;
-    }
-
     /* ── HERO ── */
     .hero {
       text-align: center;
@@ -311,66 +298,6 @@
       letter-spacing: 8px;
     }
 
-    /* ── PRICING ── */
-    .pricing {
-      text-align: center;
-      padding: 0 0 80px;
-    }
-    .pricing-label {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 3px;
-      color: var(--text-muted);
-      margin-bottom: 32px;
-    }
-    .pricing-card {
-      display: inline-block;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 32px 48px;
-      background: var(--bg-surface);
-      margin-bottom: 32px;
-    }
-    .pricing-amount {
-      font-size: 40px;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 4px;
-    }
-    .pricing-period {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-    }
-    .pricing-cta {
-      display: inline-block;
-      padding: 10px 32px;
-      border: 1px solid var(--accent-green);
-      border-radius: 4px;
-      color: var(--accent-green);
-      font-size: 12px;
-      font-family: var(--mono);
-      font-weight: 700;
-      letter-spacing: 1px;
-      transition: background 0.2s, color 0.2s;
-      cursor: pointer;
-    }
-    .pricing-cta:hover {
-      background: var(--accent-green);
-      color: #000;
-    }
-    .pricing-features {
-      list-style: none;
-      margin-top: 32px;
-      font-size: 12px;
-      color: var(--text-muted);
-      line-height: 2.2;
-    }
-    .pricing-features .check {
-      color: var(--accent-green);
-      margin-right: 8px;
-    }
-
     /* ── FOOTER ── */
     footer {
       border-top: 1px solid var(--border-dim);
@@ -402,7 +329,6 @@
       .features-grid { grid-template-columns: 1fr; gap: 20px; }
       .smart-fmt-grid { grid-template-columns: 1fr; gap: 20px; }
       .term-body { padding: 16px; font-size: 12px; min-height: 200px; }
-      .pricing-card { padding: 24px 32px; }
       .nav-links a:not(.nav-cta) { display: none; }
     }
   </style>
@@ -414,9 +340,8 @@
   <div class="container">
     <span class="nav-logo">AIRTYPE</span>
     <div class="nav-links">
-      <a href="https://github.com/myungseung/airtype" target="_blank">GitHub</a>
       <a href="#features">Features</a>
-      <a href="#pricing" class="nav-cta">Get for $9</a>
+      <a href="pricing.html">Pricing</a>
     </div>
   </div>
 </nav>
@@ -540,22 +465,14 @@
   </div>
 </section>
 
-<!-- PRICING -->
-<div class="section-divider">- - - - - -</div>
-
-<section class="pricing" id="pricing">
+<!-- INSTALL -->
+<section class="hero" style="padding: 0 0 80px;">
   <div class="container">
-    <div class="pricing-label">NO SUBSCRIPTIONS.</div>
-    <div class="pricing-card">
-      <div class="pricing-amount">$9</div>
-      <div class="pricing-period">One-time</div>
-      <a href="#" class="pricing-cta">Buy Now &rarr;</a>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Stop typing. Start talking.</p>
+    <div class="install-box" id="copy-btn-bottom">
+      <span><span class="dollar">$</span> bun add -g @superdots/airtype</span>
+      <span class="copy-label">Copy</span>
     </div>
-    <ul class="pricing-features">
-      <li><span class="check">&#10003;</span>Unlimited terminal transcription</li>
-      <li><span class="check">&#10003;</span>Multi-language support</li>
-      <li><span class="check">&#10003;</span>75% cheaper than Typeless</li>
-    </ul>
   </div>
 </section>
 
@@ -564,7 +481,6 @@
   <div class="container">
     <span>&copy; 2026 superdots.app</span>
     <div class="footer-links">
-      <a href="https://github.com/myungseung/airtype" target="_blank">GitHub</a>
       <a href="#">Terms</a>
       <a href="#">Privacy</a>
     </div>
@@ -773,7 +689,7 @@ async function loop() {
 loop();
 
 // Copy install command
-document.getElementById('copy-btn').addEventListener('click', (e) => {
+function copyHandler(e) {
   e.preventDefault();
   navigator.clipboard.writeText('bun add -g @superdots/airtype');
   const label = e.currentTarget.querySelector('.copy-label');
@@ -781,7 +697,9 @@ document.getElementById('copy-btn').addEventListener('click', (e) => {
   label.textContent = 'Copied!';
   label.style.color = 'var(--accent-green)';
   setTimeout(() => { label.textContent = orig; label.style.color = ''; }, 1500);
-});
+}
+document.getElementById('copy-btn').addEventListener('click', copyHandler);
+document.getElementById('copy-btn-bottom').addEventListener('click', copyHandler);
 </script>
 
 </body>

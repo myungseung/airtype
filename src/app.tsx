@@ -8,7 +8,7 @@ import { buildCombo, isModifier, isDuplicate } from "./keys.js";
 import { startRecording } from "./audio.js";
 import { transcribe } from "./stt.js";
 import { polish } from "./llm.js";
-import { pasteText } from "./paste.js";
+import { pasteText, setPasteKeyListenerHooks, typeStatus, eraseChars } from "./paste.js";
 import { execSync } from "child_process";
 import { writeFileSync, mkdirSync } from "fs";
 import { reportError, reportStartup, reportLogs, reportPaymentIntent } from "./report.js";
@@ -243,12 +243,13 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
       const st = stepRef.current;
       const p = phaseRef.current;
 
-      // Step 4: shortcut capture
+      // Step 4: shortcut capture — suppress key from reaching other apps
       if (st === 4 && combo.includes("+")) {
         setCapturedCombo(combo);
+        return true;
       }
 
-      // Steps 6-9: recording toggle
+      // Steps 6-9: recording toggle — suppress shortcut key
       if (st >= 6 && st <= 9 && combo === cfgRef.current.shortcutDisplay && !isDuplicate(combo)) {
         if (p === "wait") {
           playSound("Glass");
@@ -286,6 +287,7 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
             setPhase("done");
           });
         }
+        return true;
       }
     });
 
@@ -520,57 +522,108 @@ const Daemon = ({ config, autoEnter, onToggleAutoEnter, onOpenSettings }: { conf
 
   useEffect(() => {
     const listener = new GlobalKeyboardListener();
+    let listenerPaused = false;
+
+    // Wire pause/resume so pasteText() can suspend the key listener
+    // while injecting synthetic Cmd+V keystrokes via osascript.
+    setPasteKeyListenerHooks(
+      () => { listenerPaused = true; },
+      () => { listenerPaused = false; },
+    );
+
     listener.addListener((e, isDown) => {
-      if (e.state !== "DOWN") return;
+      if (listenerPaused) return;
       const name = e.name || "";
       if (isModifier(name)) return;
       const combo = buildCombo(name, isDown);
-      if (combo !== config.shortcutDisplay || isDuplicate(combo)) return;
 
-      // Block recording if over limit
-      if (sRef.current === "limit") return;
+      // Suppress shortcut key from reaching other apps on BOTH down and up.
+      // NOTE: return true tells the native binary to suppress, but the MacKeyServer
+      // binary is x86_64-only — on Apple Silicon, Rosetta 2 adds IPC latency that
+      // often causes the CGEventTap to time out before the suppress response arrives.
+      // Fallback: send a Backspace to erase any leaked character.
+      if (combo === config.shortcutDisplay) {
+        if (e.state !== "DOWN") return true;
+        if (isDuplicate(combo)) return true;
 
-      if (sRef.current === "rec" && rRef.current) {
-        playSound("Pop");
-        sRef.current = "proc"; setState("proc");
-        const rec = rRef.current; rRef.current = null;
-        rec.stop().then(async (wav) => {
-          try {
-            const t0 = Date.now();
-            const stt = await transcribe(wav, config.inputLang);
-            if (!stt.text.trim()) { sRef.current = "ready"; setState("ready"); return; }
-            const llm = await polish(stt.text, undefined, config.outputLang);
-            const paste = await pasteText(llm.text, autoEnterRef.current);
-            const total = Date.now() - t0;
-            const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-            const dir = airpath("recordings");
-            mkdirSync(dir, { recursive: true });
-            writeFileSync(`${dir}/${ts}.wav`, wav);
-            writeFileSync(`${dir}/${ts}.json`, JSON.stringify({ ts, rawText: stt.text, polishedText: llm.text, sttMs: stt.durationMs, llmMs: llm.durationMs, pasteMs: paste, totalMs: total }, null, 2));
-            setLast({ raw: stt.text, pol: llm.text, stt: stt.durationMs, llm: llm.durationMs, paste, total });
-            const overLimit = addWords(config, llm.text);
-            setError(null);
-            if (overLimit) {
-              sRef.current = "limit"; setState("limit");
-            } else {
-              sRef.current = "ready"; setState("ready");
-            }
-          } catch (e: any) { setError(e.message); reportError("daemon-pipeline", e.message); sRef.current = "ready"; setState("ready"); }
-        });
-      } else if (sRef.current === "ready") {
-        if (isOverLimit(config)) {
-          sRef.current = "limit"; setState("limit");
-          return;
+        // Erase leaked shortcut character (e.g. backtick) + show status hint
+        const REC_HINT = "[rec...]";
+        const PROC_HINT = "[transcribing...]";
+
+        // Block recording if over limit
+        if (sRef.current === "limit") {
+          setTimeout(() => { eraseChars(1); }, 30);
+          return true;
         }
-        playSound("Glass");
-        const rec = startRecording(config.micDevice);
-        rec.onVolume((v) => setVol(v));
-        rRef.current = rec;
-        sRef.current = "rec"; setState("rec");
-        setVol(0); setLast(null); setError(null);
+
+        if (sRef.current === "rec" && rRef.current) {
+          playSound("Pop");
+          sRef.current = "proc"; setState("proc");
+          // Erase leaked char + recording hint → show transcribing hint
+          setTimeout(() => {
+            eraseChars(1 + REC_HINT.length);
+            typeStatus(PROC_HINT);
+          }, 30);
+          const rec = rRef.current; rRef.current = null;
+          rec.stop().then(async (wav) => {
+            try {
+              const t0 = Date.now();
+              const stt = await transcribe(wav, config.inputLang);
+              if (!stt.text.trim()) {
+                eraseChars(PROC_HINT.length);
+                sRef.current = "ready"; setState("ready");
+                return;
+              }
+              const llm = await polish(stt.text, undefined, config.outputLang);
+              eraseChars(PROC_HINT.length);
+              const paste = await pasteText(llm.text, autoEnterRef.current);
+              const total = Date.now() - t0;
+              const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+              const dir = airpath("recordings");
+              mkdirSync(dir, { recursive: true });
+              writeFileSync(`${dir}/${ts}.wav`, wav);
+              writeFileSync(`${dir}/${ts}.json`, JSON.stringify({ ts, rawText: stt.text, polishedText: llm.text, sttMs: stt.durationMs, llmMs: llm.durationMs, pasteMs: paste, totalMs: total }, null, 2));
+              setLast({ raw: stt.text, pol: llm.text, stt: stt.durationMs, llm: llm.durationMs, paste, total });
+              const overLimit = addWords(config, llm.text);
+              setError(null);
+              if (overLimit) {
+                sRef.current = "limit"; setState("limit");
+              } else {
+                sRef.current = "ready"; setState("ready");
+              }
+            } catch (e: any) {
+              eraseChars(PROC_HINT.length);
+              setError(e.message); reportError("daemon-pipeline", e.message); sRef.current = "ready"; setState("ready");
+            }
+          });
+        } else if (sRef.current === "ready") {
+          if (isOverLimit(config)) {
+            setTimeout(() => { eraseChars(1); }, 30);
+            sRef.current = "limit"; setState("limit");
+            return true;
+          }
+          playSound("Glass");
+          // Erase leaked char → show recording hint
+          setTimeout(() => {
+            eraseChars(1);
+            typeStatus(REC_HINT);
+          }, 30);
+          const rec = startRecording(config.micDevice);
+          rec.onVolume((v) => setVol(v));
+          rRef.current = rec;
+          sRef.current = "rec"; setState("rec");
+          setVol(0); setLast(null); setError(null);
+        }
+        return true;
       }
+
+      // Non-shortcut keys: only process DOWN events
+      if (e.state !== "DOWN") return;
     });
-    return () => listener.kill();
+    return () => {
+      setPasteKeyListenerHooks(() => {}, () => {});
+      listener.kill();
+    };
   }, []);
 
   return (
@@ -625,12 +678,13 @@ const Settings = ({ config, onSave }: { config: AirtypeConfig; onSave: (c: Airty
     if (sub !== "shortcut-capture") return;
     const listener = new GlobalKeyboardListener();
     listener.addListener((e, isDown) => {
-      if (e.state !== "DOWN") return;
       const name = e.name || "";
       if (isModifier(name)) return;
       const combo = buildCombo(name, isDown);
       if (!combo.includes("+")) return;
+      if (e.state !== "DOWN") return true; // suppress UP too
       setCapturedCombo(combo);
+      return true; // suppress key from reaching other apps during capture
     });
     return () => listener.kill();
   }, [sub]);

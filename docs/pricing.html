@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airtype — Pricing</title>
+  <meta name="description" content="Simple pricing for Airtype. Free to start, $9/mo for unlimited transcription.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-base: #0A0A0A;
+      --bg-surface: #121212;
+      --text-primary: #EDEDED;
+      --text-muted: #888888;
+      --accent-green: #4ADE80;
+      --accent-red: #F87171;
+      --border-color: #333333;
+      --border-dim: #1a1a1a;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--mono);
+      background: var(--bg-base);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+    }
+    .page-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+      padding-bottom: 48px;
+    }
+    .page-content > section {
+      width: 100%;
+    }
+    ::selection { background: var(--accent-green); color: #000; }
+    a { color: var(--text-primary); text-decoration: none; }
+
+    .container {
+      max-width: 768px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-dim);
+    }
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 52px;
+    }
+    .nav-logo {
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 3px;
+      color: var(--text-primary);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .nav-links a {
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      text-align: center;
+      padding-top: 64px;
+    }
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .page-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ── PRICING PLANS ── */
+    .pricing {
+    }
+    .pricing-plans {
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .plan {
+      border: 1px solid var(--border-dim);
+      border-radius: 8px;
+      padding: 28px 20px;
+      background: var(--bg-surface);
+      text-align: center;
+      position: relative;
+    }
+    .plan-name {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .plan-price {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .plan-price .per {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+    .plan-sub {
+      font-size: 11px;
+      color: #555;
+      margin-bottom: 20px;
+      min-height: 16px;
+    }
+    .plan-cta {
+      display: inline-block;
+      width: 100%;
+      padding: 10px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-family: var(--mono);
+      font-weight: 700;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .plan-cta:hover {
+      border-color: var(--text-muted);
+      color: var(--text-primary);
+    }
+    .plan-detail {
+      font-size: 10px;
+      color: #555;
+      margin-top: 16px;
+      line-height: 1.8;
+    }
+
+    /* ── FEATURES LIST ── */
+    .plan-features {
+      text-align: center;
+    }
+    .plan-features ul {
+      list-style: none;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 2.4;
+    }
+    .plan-features .check {
+      color: var(--accent-green);
+      margin-right: 8px;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 32px;
+      width: 360px;
+      max-width: 90vw;
+    }
+    .modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .modal-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .modal-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-base);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 12px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+    .modal-input:focus { border-color: var(--accent-green); }
+    .modal-btn {
+      width: 100%;
+      padding: 10px 0;
+      background: var(--accent-green);
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .modal-btn-secondary {
+      width: 100%;
+      padding: 10px 0;
+      margin-top: 20px;
+      background: none;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border-dim);
+      padding: 24px 0;
+    }
+    footer .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #444;
+    }
+    footer a {
+      color: #555;
+      transition: color 0.2s;
+    }
+    footer a:hover { color: var(--text-muted); }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .page-header { padding: 48px 0 16px; }
+      .page-title { font-size: 16px; }
+      .pricing-plans { grid-template-columns: 1fr; gap: 16px; }
+      .cmp-table { font-size: 10px; }
+      .cmp-table th, .cmp-table td { padding: 8px 8px; }
+      .nav-links a:not(:last-child) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">AIRTYPE</a>
+    <div class="nav-links">
+      <a href="index.html#features">Features</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-content">
+
+<!-- HEADER -->
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">IT'S FREE, BUT YOU CAN PAY.</h1>
+    <p class="page-sub"><strong style="color:var(--accent-green)">10,000 words free</strong> every week. No credit card required.</p>
+  </div>
+</section>
+
+
+<!-- PRICING PLANS -->
+<section class="pricing">
+  <div class="container">
+    <div class="pricing-plans">
+      <div class="plan">
+        <div class="plan-name">MONTHLY</div>
+        <div class="plan-price">$9 <span class="per">/mo</span></div>
+        <div class="plan-sub">Unlimited words</div>
+        <a href="#" class="plan-cta" id="subscribe-btn">Subscribe</a>
+        <div class="plan-detail">Cancel anytime</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" style="display:none;">
+  <div class="modal">
+    <!-- Step 1: email -->
+    <div id="modal-step1">
+      <div class="modal-title">Enter your email to continue</div>
+      <div class="modal-sub">Required for payment processing.</div>
+      <form id="modal-form" style="margin-top:20px;">
+        <input type="email" id="modal-email" placeholder="you@email.com" required class="modal-input">
+        <button type="submit" class="modal-btn">Continue</button>
+      </form>
+    </div>
+    <!-- Step 2: info -->
+    <div id="modal-step2" style="display:none;">
+      <div class="modal-title">Payment is being prepared</div>
+      <div class="modal-sub">We'll notify you at <strong id="modal-email-display" style="color:var(--accent-green);"></strong> when checkout is ready.</div>
+      <button class="modal-btn-secondary" id="modal-close-btn">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ALL PLANS INCLUDE -->
+<section class="plan-features">
+  <div class="container">
+    <ul>
+      <li><span class="check">&#10003;</span>Unlimited terminal transcription</li>
+      <li><span class="check">&#10003;</span>Multi-language support (all languages)</li>
+      <li><span class="check">&#10003;</span>Smart formatting &amp; auto-punctuation</li>
+      <li><span class="check">&#10003;</span>Claude Code optimized output</li>
+      <li><span class="check">&#10003;</span>Global shortcut &mdash; works in any app</li>
+    </ul>
+  </div>
+</section>
+
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <span>&copy; 2026 superdots.app</span>
+    <div class="footer-links">
+      <a href="#">Terms</a>
+      <a href="#">Privacy</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const WEBHOOK = ''; // Slack webhook URL
+
+const modal = document.getElementById('modal');
+const step1 = document.getElementById('modal-step1');
+const step2 = document.getElementById('modal-step2');
+
+function ping(text) {
+  if (!WEBHOOK) return;
+  fetch(WEBHOOK, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  }).catch(() => {});
+}
+
+// Subscribe → open modal
+document.getElementById('subscribe-btn').addEventListener('click', (e) => {
+  e.preventDefault();
+  step1.style.display = '';
+  step2.style.display = 'none';
+  modal.style.display = '';
+  document.getElementById('modal-email').focus();
+  ping('💰 *Subscribe tapped*\nTime: ' + new Date().toISOString());
+});
+
+// Email submit → step 2
+document.getElementById('modal-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('modal-email').value;
+  document.getElementById('modal-email-display').textContent = email;
+  step1.style.display = 'none';
+  step2.style.display = '';
+  ping('📧 *Email submitted*\nEmail: ' + email + '\nTime: ' + new Date().toISOString());
+});
+
+// Close modal
+document.getElementById('modal-close-btn').addEventListener('click', () => {
+  modal.style.display = 'none';
+});
+modal.addEventListener('click', (e) => {
+  if (e.target === modal) modal.style.display = 'none';
+});
+</script>
+
+</body>
+</html>

@@ -20,12 +20,12 @@ export function buildCombo(keyName: string, isDown: IGlobalKeyDownMap): string {
 
   const result = parts.join("+");
 
-  // Raw log every key event for debugging
+  // Raw log every key event for debugging (async to avoid blocking the CGEventTap response)
   const fs = require("fs");
   const { airpath } = require("./config.js");
   const ts = new Date().toISOString();
   const logLine = JSON.stringify({ ts, keyName, combo: result, isDown: Object.fromEntries(Object.entries(isDown).filter(([_, v]) => v)) }) + "\n";
-  try { fs.appendFileSync(airpath("logs", "keystrokes.jsonl"), logLine); } catch {}
+  try { fs.appendFile(airpath("logs", "keystrokes.jsonl"), logLine, () => {}); } catch {}
 
   return result;
 }
