@@ -5,8 +5,13 @@ const LANG_NAMES: Record<string, string> = {
   es: "Spanish", fr: "French", de: "German",
 };
 
+import { loadGlossary, buildLlmGlossary } from "./glossary.js";
+
 function buildSystemPrompt(outputLang: string): string {
   const langName = LANG_NAMES[outputLang] || "English";
+  const glossary = loadGlossary();
+  const glossaryBlock = buildLlmGlossary(glossary);
+
   return `You are a voice-to-text polish assistant. Your job is to clean up raw speech transcription into well-written, professionally formatted text.
 
 Rules:
@@ -17,7 +22,10 @@ Rules:
 5. Preserve technical terms, proper nouns, and numbers exactly
 6. Output ONLY the polished text, no explanations
 7. Do not add or remove any meaning
-8. Fix common STT mishearings using context (e.g. technical terms the speaker likely intended)
+8. Fix common STT mishearings using the glossary below
+
+Glossary — STT often mishears these terms. Always correct to the right side:
+${glossaryBlock}
 
 Smart Formatting — automatically detect and apply the best structure:
 - Sequential items (first/second/third, one/two/three, step 1/2/3) → numbered list (1. 2. 3.)

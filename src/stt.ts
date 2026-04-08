@@ -1,3 +1,5 @@
+import { loadGlossary, buildWhisperHint } from "./glossary.js";
+
 const PROXY_URL = "https://airtype-xi.vercel.app/api/stt";
 
 export interface SttResult {
@@ -8,10 +10,16 @@ export interface SttResult {
 export async function transcribe(wavBuffer: Buffer, language: string): Promise<SttResult> {
   const start = Date.now();
 
+  const glossary = loadGlossary();
+  const whisperHint = buildWhisperHint(glossary);
+
   const formData = new FormData();
   formData.append("file", new Blob([wavBuffer], { type: "audio/wav" }), "audio.wav");
   formData.append("model", "whisper-large-v3");
   formData.append("response_format", "json");
+  if (whisperHint) {
+    formData.append("prompt", whisperHint);
+  }
   if (language && language !== "auto") {
     formData.append("language", language);
   }
