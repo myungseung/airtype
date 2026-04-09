@@ -193,15 +193,26 @@ const KeyCaptureHint = ({ lang }: { lang: SystemLang }) => {
   );
 };
 
-// ─── Onboarding ──────────────────────────────────────
-const TOTAL_STEPS = 5;
+// ─── Auto-detect system language ────────────────────
+function detectSystemLang(): SystemLang {
+  try {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+    return locale.startsWith("ko") ? "ko" : "en";
+  } catch {
+    return "en";
+  }
+}
 
-type StepId = 1 | 2 | 3 | 4 | 5;
+// ─── Onboarding ──────────────────────────────────────
+const TOTAL_STEPS = 4;
+
+type StepId = 1 | 2 | 3 | 4;
 
 const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: AirtypeConfig) => void }) => {
   const [stepId, setStepId] = useState<StepId>(1);
 
-  const [cfg, setCfg] = useState({ ...config, inputLang: "auto" });
+  const detectedLang = detectSystemLang();
+  const [cfg, setCfg] = useState({ ...config, inputLang: "auto", systemLang: detectedLang });
   const [capturedCombo, setCapturedCombo] = useState("");
 
   const stepRef = useRef(stepId);
@@ -221,8 +232,8 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
       if (isModifier(name)) return;
       const combo = buildCombo(name, isDown);
 
-      // Step 3: shortcut capture
-      if (stepRef.current === 3 && combo.includes("+")) {
+      // Step 2: shortcut capture
+      if (stepRef.current === 2 && combo.includes("+")) {
         setCapturedCombo(combo);
         return true;
       }
@@ -236,23 +247,23 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
     if (!key.return) return;
     const st = stepRef.current;
 
-    if (st === 3 && capturedCombo) {
+    if (st === 2 && capturedCombo) {
       const updated = { ...cfgRef.current, shortcutDisplay: capturedCombo, shortcutKeys: capturedCombo.split("+") };
       cfgRef.current = updated;
       setCfg(updated);
-      stepRef.current = 4;
-      setStepId(4);
+      stepRef.current = 3;
+      setStepId(3);
     }
 
     // Congrats → daemon
-    if (st === 5) {
+    if (st === 4) {
       onDone(cfgRef.current);
     }
   });
 
   return (
     <Box flexDirection="column">
-      {stepId !== 5 && (
+      {stepId !== 4 && (
         <>
           <LogoBox />
           <Box paddingLeft={2}><Text dimColor>[{stepId}/{TOTAL_STEPS}]</Text></Box>
@@ -260,18 +271,15 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
       )}
 
       <Box flexDirection="column" paddingLeft={2} marginTop={1}>
-        {/* Step 1: System Language */}
+        {/* Step 1: Output Language */}
         {stepId === 1 && (
           <>
-            <Text bold>Select language / 언어를 선택하세요.</Text>
+            <Text bold>{s.selectOutputLang}</Text>
             <Box marginTop={1}>
               <SelectInput
-                items={[
-                  { label: "한국어", value: "ko" as SystemLang },
-                  { label: "English", value: "en" as SystemLang },
-                ]}
+                items={OUTPUT_LANGS.map(l => ({ label: LANG_LABELS[l]![cfg.systemLang], value: l }))}
                 onSelect={(item) => {
-                  const updated = { ...cfgRef.current, systemLang: item.value as SystemLang, inputLang: "auto" };
+                  const updated = { ...cfgRef.current, outputLang: item.value };
                   cfgRef.current = updated;
                   setCfg(updated);
                   stepRef.current = 2;
@@ -282,27 +290,8 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
           </>
         )}
 
-        {/* Step 2: Output Language */}
-        {stepId === 2 && (
-          <>
-            <Text bold>{s.selectOutputLang}</Text>
-            <Box marginTop={1}>
-              <SelectInput
-                items={OUTPUT_LANGS.map(l => ({ label: LANG_LABELS[l]![cfg.systemLang], value: l }))}
-                onSelect={(item) => {
-                  const updated = { ...cfgRef.current, outputLang: item.value };
-                  cfgRef.current = updated;
-                  setCfg(updated);
-                  stepRef.current = 3;
-                  setStepId(3);
-                }}
-              />
-            </Box>
-          </>
-        )}
-
-        {/* Step 3: Shortcut */}
-        {stepId === 3 && !capturedCombo && (
+        {/* Step 2: Shortcut */}
+        {stepId === 2 && !capturedCombo && (
           <>
             <Text bold>{s.setShortcut}</Text>
             <Text dimColor>{s.pressCombo}</Text>
@@ -311,7 +300,7 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
             <KeyCaptureHint lang={cfg.systemLang} />
           </>
         )}
-        {stepId === 3 && capturedCombo && (
+        {stepId === 2 && capturedCombo && (
           <>
             <Box marginBottom={1}><Text bold color="cyan">{capturedCombo}</Text></Box>
             <Text>{s.useThisKey}</Text>
@@ -319,8 +308,8 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
           </>
         )}
 
-        {/* Step 4: Mic */}
-        {stepId === 4 && (
+        {/* Step 3: Mic */}
+        {stepId === 3 && (
           <>
             <Text bold>{s.selectMic}</Text>
             <Box marginTop={1}>
@@ -331,16 +320,16 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
                   cfgRef.current = updated;
                   setCfg(updated);
                   saveConfig(updated);
-                  stepRef.current = 5;
-                  setStepId(5);
+                  stepRef.current = 4;
+                  setStepId(4);
                 }}
               />
             </Box>
           </>
         )}
 
-        {/* Step 5: Congrats */}
-        {stepId === 5 && (
+        {/* Step 4: Congrats */}
+        {stepId === 4 && (
           <>
             <LogoBox />
             <Box flexDirection="column" paddingLeft={2}>

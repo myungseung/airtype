@@ -1,6 +1,6 @@
 {
   "name": "@superdots/airtype",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Speak and it types. Hands-free voice transcription CLI for macOS.",
   "type": "module",
   "bin": {
