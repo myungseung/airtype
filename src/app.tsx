@@ -29,8 +29,6 @@ const strings = {
     useThisKey: "이 키로 할까요?",
     confirmOrChange: "Enter — 확정  |  다른 키 — 변경",
     selectMic: "어떤 마이크를 사용할까요?",
-    testFree: "테스트해볼게요.",
-    saySomething: "아무 말이나 해보세요.",
     setupDone: "✓ 설정 완료!",
     nowPress: (s: string) => `이제 아무 앱에서 ${s} 을 누르면`,
     recStarts: "녹음이 시작됩니다. 소리로 알려드릴게요.",
@@ -54,11 +52,7 @@ const strings = {
     keyAllow: "에서 이 터미널 앱을 허용해주세요.",
     keyRestart: "그래도 안 되면 Ctrl+C 후 터미널을 재시작하고 다시 실행하세요.",
     selectSystemLang: "언어를 선택하세요.",
-    selectInputLang: "음성 입력 언어를 선택하세요.",
     selectOutputLang: "출력 언어를 선택하세요.",
-    guide1: { intro: "말을 더듬어도, Airtype이 깔끔하게 정리해줘요.", sentence: "Um so I think... no wait... we need to fix the login bug" },
-    guide2: { intro: "나열하면 자동으로 번호를 매겨줘요.", sentence: "First update docs second fix the bug third deploy" },
-    guide3: { intro: "이메일도 말로 쓸 수 있어요.", sentence: "Dear Michael new line follow up period Regards Chris" },
     statusHint: "S settings  |  E auto-enter  |  Ctrl+C quit",
   },
   en: {
@@ -75,8 +69,6 @@ const strings = {
     useThisKey: "Use this key?",
     confirmOrChange: "Enter — confirm  |  other key — change",
     selectMic: "Which microphone?",
-    testFree: "Let's test it.",
-    saySomething: "Say anything.",
     setupDone: "✓ Setup complete!",
     nowPress: (s: string) => `Press ${s} in any app to start`,
     recStarts: "recording. You'll hear a sound.",
@@ -100,11 +92,7 @@ const strings = {
     keyAllow: "Allow this terminal app.",
     keyRestart: "If still not working, Ctrl+C, restart terminal, and try again.",
     selectSystemLang: "Select your language.",
-    selectInputLang: "Select voice input language.",
     selectOutputLang: "Select output language.",
-    guide1: { intro: "Even if you stutter, Airtype cleans it up.", sentence: "Um so I think... no wait... we need to fix the login bug" },
-    guide2: { intro: "List items and it auto-numbers them.", sentence: "First update docs second fix the bug third deploy" },
-    guide3: { intro: "You can dictate emails too.", sentence: "Dear Michael new line follow up period Regards Chris" },
     statusHint: "S settings  |  E auto-enter  |  Ctrl+C quit",
   },
 };
@@ -206,31 +194,24 @@ const KeyCaptureHint = ({ lang }: { lang: SystemLang }) => {
 };
 
 // ─── Onboarding ──────────────────────────────────────
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 5;
 
-type StepId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+type StepId = 1 | 2 | 3 | 4 | 5;
 
 const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: AirtypeConfig) => void }) => {
   const [stepId, setStepId] = useState<StepId>(1);
 
-  const [cfg, setCfg] = useState({ ...config });
+  const [cfg, setCfg] = useState({ ...config, inputLang: "auto" });
   const [capturedCombo, setCapturedCombo] = useState("");
-  const [phase, setPhase] = useState<RecPhase>("wait");
-  const [result, setResult] = useState<{ raw: string; pol: string } | null>(null);
-  const [volume, setVolume] = useState(0);
 
   const stepRef = useRef(stepId);
   stepRef.current = stepId;
-  const phaseRef = useRef(phase);
-  phaseRef.current = phase;
-  const recRef = useRef<ReturnType<typeof startRecording> | null>(null);
   const cfgRef = useRef(cfg);
   cfgRef.current = cfg;
 
   const s = t(cfg.systemLang);
-  const GUIDES = [s.guide1, s.guide2, s.guide3];
 
-  // ── Global key listener ──
+  // ── Global key listener (shortcut capture only) ──
   useEffect(() => {
     const listener = new GlobalKeyboardListener();
 
@@ -240,53 +221,9 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
       if (isModifier(name)) return;
       const combo = buildCombo(name, isDown);
 
-      const st = stepRef.current;
-      const p = phaseRef.current;
-
-      // Step 4: shortcut capture — suppress key from reaching other apps
-      if (st === 4 && combo.includes("+")) {
+      // Step 3: shortcut capture
+      if (stepRef.current === 3 && combo.includes("+")) {
         setCapturedCombo(combo);
-        return true;
-      }
-
-      // Steps 6-9: recording toggle — suppress shortcut key
-      if (st >= 6 && st <= 9 && combo === cfgRef.current.shortcutDisplay && !isDuplicate(combo)) {
-        if (p === "wait") {
-          playSound("Glass");
-          phaseRef.current = "rec";
-          setPhase("rec");
-          setVolume(0);
-          const rec = startRecording(cfgRef.current.micDevice);
-          rec.onVolume((v) => setVolume(v));
-          recRef.current = rec;
-        } else if (p === "rec" && recRef.current) {
-          playSound("Pop");
-          phaseRef.current = "proc";
-          setPhase("proc");
-          const r = recRef.current;
-          recRef.current = null;
-          r.stop().then(async (wav) => {
-            try {
-              const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-              const dir = airpath("recordings");
-              mkdirSync(dir, { recursive: true });
-              writeFileSync(`${dir}/onboard-${ts}.wav`, wav);
-
-              const stt = await transcribe(wav, cfgRef.current.inputLang);
-              const llm = await polish(stt.text, undefined, cfgRef.current.outputLang);
-              setResult({ raw: stt.text, pol: llm.text });
-
-              writeFileSync(`${dir}/onboard-${ts}.json`, JSON.stringify({
-                ts, step: stepRef.current, rawText: stt.text, polishedText: llm.text,
-                sttMs: stt.durationMs, llmMs: llm.durationMs,
-              }, null, 2));
-            } catch (err: any) {
-              setResult({ raw: "(error)", pol: err.message });
-            }
-            phaseRef.current = "done";
-            setPhase("done");
-          });
-        }
         return true;
       }
     });
@@ -298,50 +235,27 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
   useInput((_, key) => {
     if (!key.return) return;
     const st = stepRef.current;
-    const p = phaseRef.current;
 
-    if (st === 4 && capturedCombo) {
+    if (st === 3 && capturedCombo) {
       const updated = { ...cfgRef.current, shortcutDisplay: capturedCombo, shortcutKeys: capturedCombo.split("+") };
       cfgRef.current = updated;
       setCfg(updated);
-      stepRef.current = 5;
-      setStepId(5);
-    }
-
-    if (p === "done") {
-      setResult(null);
-      phaseRef.current = "wait";
-      setPhase("wait");
-      setVolume(0);
-
-      if (st === 6) {
-        cfgRef.current = { ...cfgRef.current, testPassed: true };
-        setCfg(cfgRef.current);
-      }
-
-      if (st < 9) {
-        stepRef.current = (st + 1) as StepId;
-        setStepId((st + 1) as StepId);
-      } else {
-        const final = { ...cfgRef.current, onboardingDone: true, testPassed: true };
-        saveConfig(final);
-        stepRef.current = 10;
-        setStepId(10);
-      }
+      stepRef.current = 4;
+      setStepId(4);
     }
 
     // Congrats → daemon
-    if (st === 10) {
+    if (st === 5) {
       onDone(cfgRef.current);
     }
   });
 
   return (
     <Box flexDirection="column">
-      {stepId !== 10 && (
+      {stepId !== 5 && (
         <>
           <LogoBox />
-          <Box paddingLeft={2}><Text dimColor>[{Math.min(stepId, TOTAL_STEPS)}/{TOTAL_STEPS}]</Text></Box>
+          <Box paddingLeft={2}><Text dimColor>[{stepId}/{TOTAL_STEPS}]</Text></Box>
         </>
       )}
 
@@ -357,7 +271,7 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
                   { label: "English", value: "en" as SystemLang },
                 ]}
                 onSelect={(item) => {
-                  const updated = { ...cfgRef.current, systemLang: item.value as SystemLang };
+                  const updated = { ...cfgRef.current, systemLang: item.value as SystemLang, inputLang: "auto" };
                   cfgRef.current = updated;
                   setCfg(updated);
                   stepRef.current = 2;
@@ -368,15 +282,15 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
           </>
         )}
 
-        {/* Step 2: Input Language */}
+        {/* Step 2: Output Language */}
         {stepId === 2 && (
           <>
-            <Text bold>{s.selectInputLang}</Text>
+            <Text bold>{s.selectOutputLang}</Text>
             <Box marginTop={1}>
               <SelectInput
-                items={INPUT_LANGS.map(l => ({ label: LANG_LABELS[l]![cfg.systemLang], value: l }))}
+                items={OUTPUT_LANGS.map(l => ({ label: LANG_LABELS[l]![cfg.systemLang], value: l }))}
                 onSelect={(item) => {
-                  const updated = { ...cfgRef.current, inputLang: item.value };
+                  const updated = { ...cfgRef.current, outputLang: item.value };
                   cfgRef.current = updated;
                   setCfg(updated);
                   stepRef.current = 3;
@@ -387,27 +301,8 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
           </>
         )}
 
-        {/* Step 3: Output Language */}
-        {stepId === 3 && (
-          <>
-            <Text bold>{s.selectOutputLang}</Text>
-            <Box marginTop={1}>
-              <SelectInput
-                items={OUTPUT_LANGS.map(l => ({ label: LANG_LABELS[l]![cfg.systemLang], value: l }))}
-                onSelect={(item) => {
-                  const updated = { ...cfgRef.current, outputLang: item.value };
-                  cfgRef.current = updated;
-                  setCfg(updated);
-                  stepRef.current = 4;
-                  setStepId(4);
-                }}
-              />
-            </Box>
-          </>
-        )}
-
-        {/* Step 4: Shortcut */}
-        {stepId === 4 && !capturedCombo && (
+        {/* Step 3: Shortcut */}
+        {stepId === 3 && !capturedCombo && (
           <>
             <Text bold>{s.setShortcut}</Text>
             <Text dimColor>{s.pressCombo}</Text>
@@ -416,7 +311,7 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
             <KeyCaptureHint lang={cfg.systemLang} />
           </>
         )}
-        {stepId === 4 && capturedCombo && (
+        {stepId === 3 && capturedCombo && (
           <>
             <Box marginBottom={1}><Text bold color="cyan">{capturedCombo}</Text></Box>
             <Text>{s.useThisKey}</Text>
@@ -424,46 +319,28 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
           </>
         )}
 
-        {/* Step 5: Mic */}
-        {stepId === 5 && (
+        {/* Step 4: Mic */}
+        {stepId === 4 && (
           <>
             <Text bold>{s.selectMic}</Text>
             <Box marginTop={1}>
               <SelectInput
                 items={getMics().map(m => ({ label: m, value: m }))}
                 onSelect={item => {
-                  setCfg(prev => ({ ...prev, micDevice: item.value }));
-                  cfgRef.current = { ...cfgRef.current, micDevice: item.value };
-                  stepRef.current = 6;
-                  setStepId(6);
+                  const updated = { ...cfgRef.current, micDevice: item.value, onboardingDone: true };
+                  cfgRef.current = updated;
+                  setCfg(updated);
+                  saveConfig(updated);
+                  stepRef.current = 5;
+                  setStepId(5);
                 }}
               />
             </Box>
           </>
         )}
 
-        {/* Step 6: Free test */}
-        {stepId === 6 && (
-          <>
-            <Text bold>{s.testFree}</Text>
-            <Text dimColor>{s.saySomething}</Text>
-            <StatusLine phase={phase} shortcut={cfg.shortcutDisplay} result={result} volume={volume} lang={cfg.systemLang} />
-          </>
-        )}
-
-        {/* Steps 7-9: Guided tests */}
-        {stepId >= 7 && stepId <= 9 && (
-          <>
-            <Text>{GUIDES[stepId - 7]!.intro}</Text>
-            <Box marginTop={1}>
-              <Text bold color="white">"{GUIDES[stepId - 7]!.sentence}"</Text>
-            </Box>
-            <StatusLine phase={phase} shortcut={cfg.shortcutDisplay} result={result} volume={volume} lang={cfg.systemLang} />
-          </>
-        )}
-
-        {/* Step 10: Congrats */}
-        {stepId === 10 && (
+        {/* Step 5: Congrats */}
+        {stepId === 5 && (
           <>
             <LogoBox />
             <Box flexDirection="column" paddingLeft={2}>
@@ -474,7 +351,6 @@ const Onboarding = ({ config, onDone }: { config: AirtypeConfig; onDone: (c: Air
               <Text> </Text>
               <Text dimColor>{s.shortcut}: {cfg.shortcutDisplay}</Text>
               <Text dimColor>{s.microphone}: {cfg.micDevice}</Text>
-              <Text dimColor>{s.inputLang}: {LANG_LABELS[cfg.inputLang]?.[cfg.systemLang] || cfg.inputLang}</Text>
               <Text dimColor>{s.outputLang}: {LANG_LABELS[cfg.outputLang]?.[cfg.systemLang] || cfg.outputLang}</Text>
               <Text> </Text>
               <Text dimColor>{s.redoSetup}</Text>

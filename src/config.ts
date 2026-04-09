@@ -97,7 +97,7 @@ export function isReady(config: AirtypeConfig): boolean {
   return !!(
     config.shortcutKeys.length > 0 &&
     config.micDevice && config.micDevice !== "default" &&
-    config.testPassed
+    config.onboardingDone
   );
 }
 
